@@ -5,7 +5,9 @@
 use strict;
 use warnings;
 
+use Bio::SeqIO;
 use Set::Scalar;
+use Getopt::Long;
 
 # read positions file a Set::Scalar object
 # format
@@ -48,11 +50,32 @@ sub read_pos
 	return \%results;
 }
 
-my $usage = "$0 [variants-true.tsv] [variants-detected.tsv]\n";
+my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --core-genome [core-genome.fasta]\n".
+"Parameters:\n".
+"\t--variants-true: The true variants table.\n".
+"\t--variants-detected: The detected variants table\n".
+"\t--core-genome:  The core genome in fasta format.  For most cases this is assumed to be the same as the reference genome\n".
+"Example:\n".
+"$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --core-genome reference.fasta\n\n";
 
-die "error:\n$usage" if (@ARGV != 2);
+my ($variants_true_file,$variants_detected_file, $core_genome_file);
 
-my ($variants_true_file,$variants_detected_file) = @ARGV;
+if (!GetOptions('variants-true=s' => \$variants_true_file,
+		'variants-detected=s' => \$variants_detected_file,
+		'core-genome=s' => \$core_genome_file))
+{
+	die "Invalid option\n".$usage;
+}
+
+die "--variants-true not defined\n$usage" if (not defined $variants_true_file);
+die "--variants-detected not defined\n$usage" if (not defined $variants_detected_file);
+die "--core-genome not defined\n$usage" if (not defined $core_genome_file);
+
+my $core_genome_obj = Bio::SeqIO->new(-file=>"<$core_genome_file", -format=>"fasta");
+my $core_genome_size = 0;
+while (my $seq = $core_genome_obj->next_seq) {
+	$core_genome_size += $seq->length;
+}
 
 my $variants_true = read_pos($variants_true_file);
 my $variants_detected = read_pos($variants_detected_file);
@@ -66,12 +89,33 @@ if ($variants_true->{'header'} ne $variants_detected->{'header'})
 my $var_true_valid_pos = $variants_true->{'positions-valid'};
 my $var_detected_valid_pos = $variants_detected->{'positions-valid'};
 
-# set operations
-my $true_positives = $var_true_valid_pos * $var_detected_valid_pos;
-my $false_positives = $var_detected_valid_pos - $var_true_valid_pos;
-my $true_negatives = Set::Scalar->new;
-my $false_negatives = $var_true_valid_pos - $var_detected_valid_pos;
+# Count of non variant positions in core genome
+my $non_variant_true_positions_count = $core_genome_size - $var_true_valid_pos->size;
 
-print "$variants_true_file\t$variants_detected_file\tTP\tFP\tTN\tFN\n";
-print $var_true_valid_pos->size,"\t",$var_detected_valid_pos->size,"\t",$true_positives->size,
-	"\t",$false_positives->size,"\t",$true_negatives->size,"\t",$false_negatives->size,"\n";
+# set operations
+my $true_positives_set = $var_true_valid_pos * $var_detected_valid_pos;
+my $false_positives_set = $var_detected_valid_pos - $var_true_valid_pos;
+# See comment for true negatives below
+#my $true_negatives_set;
+my $false_negatives_set = $var_true_valid_pos - $var_detected_valid_pos;
+
+my $true_valid_positives = $var_true_valid_pos->size;
+my $detected_valid_positives = $var_detected_valid_pos->size;
+my $true_positives = $true_positives_set->size;
+my $false_positives = $false_positives_set->size;
+
+# True Negatives are positions in our alignment that have no variant in any genome 
+# That is, the number of positions in the core minus the total variant positions detected.
+# This assumes that our definition of core genome size above is valid.
+my $true_negatives = $non_variant_true_positions_count;
+
+my $false_negatives = $false_negatives_set->size;
+my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
+my $specificity = sprintf "%0.4f",($true_negatives) / ($true_negatives + $false_positives);
+my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_negatives);
+my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
+my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
+
+print "core_genome\t$variants_true_file\t$variants_detected_file\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "$core_genome_size\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+      "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
