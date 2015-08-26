@@ -30,7 +30,7 @@ To generate simulation cases please run the following:
 sh generate-simulations.sh
 ```
 
-This will randomly mutate genomes under `references/` and generate simulated reads under `simulations/[reference]`.  fastq files are under `simulations/[reference]/fastq.  Please run fastq files through SNVPhyl pipeline.
+This will randomly mutate genomes under `references/` and generate simulated reads under `simulations/[reference]`.  fastq files are under `simulations/[reference]/fastq`.  Please run fastq files through SNVPhyl pipeline.
 
 A table of the true variants is found under `simulations/[reference]/variants.tsv`.  To compare with generated variants table from SNVPhyl please run:
 
