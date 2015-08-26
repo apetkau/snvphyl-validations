@@ -38,11 +38,32 @@ A table of the true variants is found under `simulations/[reference]/variants.ts
 perl compare_positions.pl simulations/[reference]/variants.tsv [snvphyl variants.tsv] | column -t
 ```
 
+For example:
+
+```
+perl scripts/compare_positions.pl variants-true.tsv variants-detected.tsv |column -t
+variants-true.tsv  variants-detected.tsv  Intersection  Unique-variants-true.tsv  Unique-variants-detected.tsv
+1000               947                    947           53                        0
+```
+
 To find exact differences, please run:
 
 ```
 diff simulations/[reference]/variants.tsv [snvphyl variants.tsv]
 ```
+
+For example:
+
+```
+diff variants-true.tsv variants-detected.tsv 
+18c18
+< gi|662858600|ref|NC_013766.2| 45111   valid   G       C       G       C       G       C       G       C       G       C       G
+---
+> gi|662858600|ref|NC_013766.2| 45111   DP4     G       C       G       C       G       -       G       C       G       C       G
+...
+```
+
+Note, differences will show up in repetitive regions due to masking those regions out in SNVPhyl.
 
 Considerations
 ==============
