@@ -7,15 +7,17 @@ use strict;
 
 use Bio::SeqIO;
 use File::Basename;
+use Getopt::Long;
 
 my $usage =
-"$0 [reference.fasta] [number of genomes] [number of positions]\n".
+"$0 --reference [reference.fasta] --num-genomes [number of genomes] --num-variants [number of positions] --random-seed [random seed]\n".
 "Parameters:\n".
-"\treference.fasta:  A reference genome in FASTA format\n".
-"\tnumber of genomes: Number of genomes to include in template table\n".
-"\tnumber of positions: Number of positions to mutate in table\n".
+"\t--reference:  A reference genome in FASTA format\n".
+"\t--num-genomes: Number of genomes to include in the table\n".
+"\t--num-variants: Number of variants to mutate in table\n".
+"\t--random-seed: Random seed for generating mutations\n".
 "Example:\n".
-"$0 reference.fasta 5 100 | sort -n -k 2,2 > variants_table.tsv\n";
+"$0 --reference reference.fasta --num-genomes 5 --num-variants 100 --random-seed 42 | sort -k 1,1 -k 2,2n > variants_table.tsv\n";
 
 # reads all reference sequences into a table structured like
 # ref_id => ref_seq
@@ -38,9 +40,14 @@ sub read_reference_sequences
 ############
 ### MAIN ###
 ############
-die $usage if (@ARGV != 3);
-my ($ref_file,$num_genomes,$num_positions) = @ARGV;
-srand(time);
+my ($ref_file,$num_genomes,$num_positions,$random_seed);
+
+if (!GetOptions('reference=s' => \$ref_file,
+                'num-variants=i' => \$num_positions,
+                'num-genomes=i' => \$num_genomes,
+                'random-seed=i' => \$random_seed)) {
+        die "Invalid option\n".$usage;
+}
 
 die "reference.fasta is not defined\n$usage" if (not defined $ref_file);
 die "$ref_file does not exist\n$usage" if (not -e $ref_file);
@@ -48,6 +55,15 @@ die "number of genomes is not defined\n$usage" if (not defined $num_genomes);
 die "number of genomes=$num_genomes is not valid\n$usage" if ($num_genomes !~ /^\d+$/);
 die "number of positions is not defined\n$usage" if (not defined $num_positions);
 die "number of positions=$num_positions is not valid\n$usage" if ($num_positions !~ /^\d+$/);
+
+if (not defined $random_seed) {
+	$random_seed = 42;
+	warn "--random-seed not defined, defaulting to $random_seed\n";
+}
+
+srand($random_seed);
+
+my %positions_used;
 
 my $swap_table = {
 'A' => 'T',
@@ -73,15 +89,21 @@ print "\n";
 
 for (my $pos_num = 0; $pos_num < $num_positions; $pos_num++)
 {
-	# select random sequence
-	my $seq_num = int(rand($number_sequences));
+	my ($seq_num,$pos,$sequence_name,$sequence,$length_sequence);
+	# generate unique positions
+	do 
+	{
+		# select random sequence
+		$seq_num = int(rand($number_sequences));
 
-	my $sequence_name = $sequence_names[$seq_num];
-	my $sequence = $reference_table->{$sequence_name};
-	my $length_sequence = $sequence->length;
+		$sequence_name = $sequence_names[$seq_num];
+		$sequence = $reference_table->{$sequence_name};
+		$length_sequence = $sequence->length;
 
-	# select random position
-	my $pos = int(rand($length_sequence));
+		# select random position
+		$pos = int(rand($length_sequence));
+	} while (exists $positions_used{$seq_num}{$pos});
+	$positions_used{$seq_num}{$pos} = 1;
 
 	my $seq_string = $sequence->seq;
 	my $ref_base = substr($seq_string,$pos,1);
