@@ -85,7 +85,7 @@ foreach my $genome_name (@genome_names)
 	next if ($genome_name eq 'Reference');
 
 	my $genome_file = "$genomes_out_dir/$genome_name.fasta";
-	my $fastq_file_prefix = "$out_dir/$genome_name";
+	my $fastq_file_prefix = "$out_dir/${genome_name}_";
 
 	# mutate each new genome, write to file
 	my $variant_entry = $variants_core_table->{$genome_name};
