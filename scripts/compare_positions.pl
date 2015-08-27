@@ -131,9 +131,6 @@ my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_
 my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 
-print "#--core-genome: $core_genome_file\n";
-print "#--variants-true: $variants_true_file\n";
-print "#--variants-detected: $variants_detected_file\n";
-print "Core_Genome\tCore_Genome_Ex_Positions\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "$core_genome_size\t$core_genome_size_minus_excluded_positions\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+print "Core_Genome_File\tCore_Genome\tCore_Genome_Ex_Positions\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "$core_genome_file\t$core_genome_size\t$core_genome_size_minus_excluded_positions\t$variants_true_file\t$variants_detected_file\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
       "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
