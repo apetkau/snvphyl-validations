@@ -41,12 +41,9 @@ perl compare_positions.pl --variants-true simulations/[reference]/variants.tsv -
 This will generate a table contining summaries of each file, true positives/negatives, along with calculations of specificity and sensitivity for the alignment.  The core genome is used for determining the number of true negatives and for our simulations is assumed to be equivalent to the reference genome.  For example:
 
 ```
-perl scripts/compare_positions.pl --variants-true variants-true.tsv --variants-detected variants-detected.tsv --reference-genome |column -t
-#--core-genome:        08-5578.fasta
-#--variants-true:      variants-true.tsv
-#--variants-detected:  variants-detected.tsv
-Core_Genome            True_Variants          Variants_Detected  TP   FP  TN       FN  Accuracy  Specificity  Sensitivity  Precision  FP_Rate
-3032624                1000                   947                947  0   3031624  53  1.0000    1.0000       0.9470       1.0000     0.0000
+perl scripts/compare_positions.pl --variants-true variants-true.tsv --variants-detected variants-detected.tsv --core-genome 08-5578.fasta |column -t
+Core_Genome_File  Core_Genome  Variants_True_File  Variants_Detected_File  True_Variants  Variants_Detected  TP   FP  TN       FN  Accuracy  Specificity  Sensitivity  Precision  FP_Rate
+08-5578.fasta     3032624      variants-true.tsv   variants-detected.tsv   1000           989                989  0   3031635  11  1.0000    1.0000       0.9890       1.0000     0.0000
 ```
 
 To find exact differences, please run (you may need to sort the detected variants table first with `sort -k 1,1 -k 2,2n`):
@@ -74,5 +71,4 @@ Considerations
 A few considerations when using these simulated datasets include:
 
 * Only very simple mutations are simulated.  No indels.
-* Mutations are generated for random positions.  For any positions in repetitive regions, SNVPhyl will not detect and this will show up as missing variants.
 * ART assumes reads produced by a MiSeq all have the same length.  This is not the case for real-world data.
