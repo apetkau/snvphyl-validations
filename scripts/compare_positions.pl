@@ -4,10 +4,14 @@
 
 use strict;
 use warnings;
+use FindBin;
+
+use lib $FindBin::Bin.'/lib';
 
 use Bio::SeqIO;
 use Set::Scalar;
 use Getopt::Long;
+use InvalidPositions;
 
 # read positions file a Set::Scalar object
 # format
@@ -50,19 +54,21 @@ sub read_pos
 	return \%results;
 }
 
-my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --core-genome [core-genome.fasta]\n".
+my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --core-genome [core-genome.fasta] [--exclude-positions positions.tsv]\n".
 "Parameters:\n".
 "\t--variants-true: The true variants table.\n".
 "\t--variants-detected: The detected variants table\n".
-"\t--core-genome:  The core genome in fasta format.  For most cases this is assumed to be the same as the reference genome\n".
+"\t--core-genome: The core genome in fasta format.  For most cases this is assumed to be the same as the reference genome\n".
+"\t--exclude-positions: Optional positions to exclude from counts of the core genome.  Assumes variant table was run with --exclude-positions\n".
 "Example:\n".
-"$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --core-genome reference.fasta\n\n";
+"$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --core-genome reference.fasta --exclude-positions repeats.tsv\n\n";
 
-my ($variants_true_file,$variants_detected_file, $core_genome_file);
+my ($variants_true_file,$variants_detected_file, $core_genome_file, $excluded_positions_file);
 
 if (!GetOptions('variants-true=s' => \$variants_true_file,
 		'variants-detected=s' => \$variants_detected_file,
-		'core-genome=s' => \$core_genome_file))
+		'core-genome=s' => \$core_genome_file,
+		'exclude-positions=s' => \$excluded_positions_file))
 {
 	die "Invalid option\n".$usage;
 }
@@ -75,6 +81,15 @@ my $core_genome_obj = Bio::SeqIO->new(-file=>"<$core_genome_file", -format=>"fas
 my $core_genome_size = 0;
 while (my $seq = $core_genome_obj->next_seq) {
 	$core_genome_size += $seq->length;
+}
+
+my $core_genome_size_minus_excluded_positions = $core_genome_size;
+if (defined $excluded_positions_file) {
+	my $invalid_pos_parser = InvalidPositions->new;
+	my $invalid_positions = $invalid_pos_parser->read_invalid_positions($excluded_positions_file);
+	my $count_excluded_positions = scalar(keys %$invalid_positions);
+	print STDERR "Excluded $count_excluded_positions defined in file $excluded_positions_file\n";
+	$core_genome_size_minus_excluded_positions -= $count_excluded_positions;
 }
 
 my $variants_true = read_pos($variants_true_file);
@@ -90,7 +105,7 @@ my $var_true_valid_pos = $variants_true->{'positions-valid'};
 my $var_detected_valid_pos = $variants_detected->{'positions-valid'};
 
 # Count of non variant positions in core genome
-my $non_variant_true_positions_count = $core_genome_size - $var_true_valid_pos->size;
+my $non_variant_true_positions_count = $core_genome_size_minus_excluded_positions - $var_true_valid_pos->size;
 
 # set operations
 my $true_positives_set = $var_true_valid_pos * $var_detected_valid_pos;
@@ -119,6 +134,6 @@ my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_pos
 print "#--core-genome: $core_genome_file\n";
 print "#--variants-true: $variants_true_file\n";
 print "#--variants-detected: $variants_detected_file\n";
-print "Core_Genome\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "$core_genome_size\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+print "Core_Genome\tCore_Genome_Ex_Positions\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "$core_genome_size\t$core_genome_size_minus_excluded_positions\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
       "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
