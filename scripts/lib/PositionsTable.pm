@@ -23,7 +23,7 @@ sub new
 #	positions_file:  The positions table file
 # output
 # 	a genomes_core_snp table mapping
-# 		strain_id => {chrom => {pos => {'reference' => $ref_base, 'alternative' => $alt_base}}}
+# 		strain_id => {chrom => {pos => {'reference' => $ref_base, 'alternative' => $alt_base, 'status' => $status}}}
 #	a genomes_core_snp_count table mapping
 #		strain_id => count_snps_from_reference
 sub read_table
@@ -50,7 +50,6 @@ sub read_table
                 $genomes_core_snp_count{$strain} = 0;
         }
 
-	my $valid = 0;
         my $total = 0;
         while(my $line = readline($fh))
         {
@@ -63,16 +62,12 @@ sub read_table
                 {
                         die "Error: line $line does not have same number of entries as header for $positions_file";
                 }
-                elsif ($status ne 'valid')
-                {
-                        print STDERR "skipping over line \"$line\": invalid\n" if ($verbose);
-                }
                 else
                 {
                         for (my $i = 1; $i < @dna; $i++)
                         {
                                 $genomes_core_snp{$strains[$i]}{$chrom}{$pos} = {'reference' => $dna[0],
-                                        'alternative' => $dna[$i]};
+                                        'alternative' => $dna[$i], 'status' => $status};
 
                                 if ($dna[0] ne $dna[$i])
                                 {
@@ -80,13 +75,10 @@ sub read_table
                                 }
 
                         }
-                        $valid++;
                 }
                 $total++;
         }
         close $fh;
-
-        print STDERR "Kept $valid valid positions out of $total total positions\n" if ($verbose);
 
         return (\%genomes_core_snp,\%genomes_core_snp_count);
 }
