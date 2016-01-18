@@ -150,7 +150,15 @@ foreach my $genome_name (sort {$a cmp $b} @genome_names)
 			my $real_ref_base = substr($seq_string,$string_pos,1);
 			die "error for $genome_name:$chrom:$pos base($real_ref_base) from file $ref_file != base($ref) from file $variants_file" if (lc($real_ref_base) ne lc($ref));
 
-			substr($seq_string,$string_pos,1) = $alt; # perform mutation
+			# for deletion, make sure to delete alt base
+			if ($alt eq '-')
+			{
+				substr($seq_string,$string_pos,1) = ''; # deletion
+			}
+			else
+			{
+				substr($seq_string,$string_pos,1) = $alt; # perform mutation (grows sequence string for insertion)
+			}
 		}
 
 		my $generated_sequence = $factory->create(-seq => $seq_string, -id => $chrom);
