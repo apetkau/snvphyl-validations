@@ -85,6 +85,46 @@ sub print_substitutions
 	}
 }
 
+sub print_deletions
+{
+	my ($base,$index) = @_;
+
+	# only print deletion for one genome
+	if ($index == 0)
+	{
+		print "\t-";
+	}
+	# every 2nd genome should be switched, the others left alone
+	elsif ($index % 2 == 0)
+	{
+		print "\t".$swap_table->{uc($base)};
+	}
+	else
+	{
+		print "\t$base";
+	}
+}
+
+sub print_insertions
+{
+	my ($base,$index) = @_;
+
+	# only print insertion for one genome
+	if ($index == 0)
+	{
+		print "\t${base}${base}";
+	}
+	# every 2nd genome should be switched, the others left alone
+	elsif ($index % 2 == 0)
+	{
+		print "\t".$swap_table->{uc($base)};
+	}
+	else
+	{
+		print "\t$base";
+	}
+}
+
 sub get_unique_position
 {
 	my ($sequence_name,$pos,$sequence,$length_sequence);
@@ -157,6 +197,7 @@ $number_sequences = scalar(@sequence_names);
 
 print_header_line($num_genomes,$reference_name);
 
+# substitutions
 for (my $pos_num = 0; $pos_num < $num_substitutions; $pos_num++)
 {
 	my ($sequence_name,$pos,$ref_base) = get_unique_position();
@@ -168,6 +209,38 @@ for (my $pos_num = 0; $pos_num < $num_substitutions; $pos_num++)
 	for (my $i = 0; $i < $num_genomes; $i++)
 	{
 		print_substitutions($ref_base,$i);
+	}
+	print "\n";
+}
+
+# deletions
+for (my $pos_num = 0; $pos_num < $num_deletions; $pos_num++)
+{
+	my ($sequence_name,$pos,$ref_base) = get_unique_position();
+
+	# print variant line, +1 to position since positions start with 1, not 0
+	print "$sequence_name\t".($pos+1)."\tdeletion\t$ref_base";
+
+	# for each genome to generate
+	for (my $i = 0; $i < $num_genomes; $i++)
+	{
+		print_deletions($ref_base,$i);
+	}
+	print "\n";
+}
+
+# insertions
+for (my $pos_num = 0; $pos_num < $num_insertions; $pos_num++)
+{
+	my ($sequence_name,$pos,$ref_base) = get_unique_position();
+
+	# print variant line, +1 to position since positions start with 1, not 0
+	print "$sequence_name\t".($pos+1)."\tinsertion\t$ref_base";
+
+	# for each genome to generate
+	for (my $i = 0; $i < $num_genomes; $i++)
+	{
+		print_insertions($ref_base,$i);
 	}
 	print "\n";
 }
