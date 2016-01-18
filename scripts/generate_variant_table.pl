@@ -24,6 +24,12 @@ my $usage =
 "Example:\n".
 "$0 --reference reference.fasta --num-genomes 5 --num-variants 100 --random-seed 42 --exclude-positions repeats.tsv | sort -k 1,1 -k 2,2n > variants_table.tsv\n";
 
+my $swap_table = {
+'A' => 'T',
+'T' => 'G',
+'G' => 'C',
+'C' => 'A'};
+
 # reads all reference sequences into a table structured like
 # ref_id => ref_seq
 sub read_reference_sequences
@@ -40,6 +46,35 @@ sub read_reference_sequences
 	}
 
 	return \%sequence_table;
+}
+
+sub print_header_line
+{
+	my ($num_genomes,$reference_name) = @_;
+
+	# print header line
+	print "#Chromosome\tPosition\tStatus\tReference";
+	# for each genome
+	for (my $i = 0; $i < $num_genomes; $i++)
+	{
+		print "\t$reference_name-$i";
+	}
+	print "\n";
+}
+
+sub print_substitutions
+{
+	my ($base,$index) = @_;
+
+	# every 2nd genome should be switched, the others left alone
+	if ($index % 2 == 0)
+	{
+		print "\t".$swap_table->{uc($base)};
+	}
+	else
+	{
+		print "\t$base";
+	}
 }
 
 ############
@@ -77,11 +112,6 @@ if (defined $excluded_positions_file) {
 	$positions_used = $invalid_positions_parser->read_invalid_positions($excluded_positions_file);
 }
 
-my $swap_table = {
-'A' => 'T',
-'T' => 'G',
-'G' => 'C',
-'C' => 'A'};
 
 # read original reference sequences
 my $reference_table = read_reference_sequences($ref_file);
@@ -90,18 +120,12 @@ my $reference_name = basename($ref_file, '.fasta');
 my @sequence_names = (keys %$reference_table);
 my $number_sequences = scalar(@sequence_names);
 
-# print header line
-print "#Chromosome\tPosition\tStatus\tReference";
-# for each genome
-for (my $i = 0; $i < $num_genomes; $i++)
-{
-	print "\t$reference_name-$i";
-}
-print "\n";
+print_header_line($num_genomes,$reference_name);
 
 for (my $pos_num = 0; $pos_num < $num_positions; $pos_num++)
 {
 	my ($seq_num,$pos,$sequence_name,$sequence,$length_sequence);
+
 	# generate unique positions
 	do 
 	{
@@ -126,30 +150,7 @@ for (my $pos_num = 0; $pos_num < $num_positions; $pos_num++)
 	# for each genome to generate
 	for (my $i = 0; $i < $num_genomes; $i++)
 	{
-		# cluster genomes
-		if ($i % 2 == 0)
-		{
-			if ($i % 4 == 0) # every 4th
-			{
-				if ($pos_num % 2 == 0) # 50% of positions
-				{
-					print "\t".$swap_table->{uc($ref_base)};
-				}
-				else
-				{
-					# swap again for other 50%
-					print "\t".$swap_table->{$swap_table->{uc($ref_base)}};
-				}
-			}
-			else
-			{
-				print "\t".$swap_table->{uc($ref_base)};
-			}
-		}
-		else
-		{
-			print "\t$ref_base";
-		}
+		print_substitutions($ref_base,$i);
 	}
 	print "\n";
 }
