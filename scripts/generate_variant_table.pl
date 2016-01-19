@@ -11,6 +11,7 @@ use lib $FindBin::Bin.'/lib';
 use Bio::SeqIO;
 use File::Basename;
 use Getopt::Long;
+use List::Util qw(shuffle);
 use InvalidPositions;
 
 my $usage =
@@ -27,16 +28,22 @@ my $usage =
 "$0 --reference reference.fasta --num-genomes 5 --num-variants 100 --random-seed 42 --exclude-positions repeats.tsv | sort -k 1,1 -k 2,2n > variants_table.tsv\n";
 
 my $swap_table = {
-'A' => 'T',
-'T' => 'G',
-'G' => 'C',
-'C' => 'A'};
+'A' => ['T','G','C'],
+'T' => ['A','G','C'],
+'G' => ['A','T','C'],
+'C' => ['A','G','T']};
 
 my $reference_table;
 my $reference_name;
 my @sequence_names;
 my $number_sequences;
 my $positions_used = {};
+
+sub get_mutated_base
+{
+	my ($base) = @_;
+	return [shuffle @{$swap_table->{uc($base)}}]->[0];
+}
 
 # reads all reference sequences into a table structured like
 # ref_id => ref_seq
@@ -77,7 +84,7 @@ sub print_substitutions
 	# every 2nd genome should be switched, the others left alone
 	if ($index % 2 == 0)
 	{
-		print "\t".$swap_table->{uc($base)};
+		print "\t".get_mutated_base($base);
 	}
 	else
 	{
@@ -97,7 +104,7 @@ sub print_deletions
 	# every 2nd genome should be switched, the others left alone
 	elsif ($index % 2 == 0)
 	{
-		print "\t".$swap_table->{uc($base)};
+		print "\t".get_mutated_base($base);
 	}
 	else
 	{
@@ -112,12 +119,13 @@ sub print_insertions
 	# only print insertion for one genome
 	if ($index == 0)
 	{
-		print "\t${base}${base}";
+		my $newbase = get_mutated_base($base);
+		print "\t${base}${newbase}";
 	}
 	# every 2nd genome should be switched, the others left alone
 	elsif ($index % 2 == 0)
 	{
-		print "\t".$swap_table->{uc($base)};
+		print "\t".get_mutated_base($base);
 	}
 	else
 	{
