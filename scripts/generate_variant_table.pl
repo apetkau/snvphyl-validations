@@ -15,7 +15,7 @@ use List::Util qw(shuffle);
 use InvalidPositions;
 
 my $usage =
-"$0 --reference [reference.fasta] --num-genomes [number of genomes] --num-variants [number of positions] --random-seed [random seed] [--exclude-positions positions.tsv]\n".
+"$0 --reference [reference.fasta] --num-genomes [number of genomes] --num-variants [number of positions] --random-seed [random seed] [--repeat-positions positions.tsv]\n".
 "Parameters:\n".
 "\t--reference:  A reference genome in FASTA format\n".
 "\t--num-variant-genomes: Number of genomes with variation to include in the table\n".
@@ -24,9 +24,9 @@ my $usage =
 "\t--num-insertions: Number of insertion positions to generate in table\n".
 "\t--num-deletions: Number of deletion positions to generate in table\n".
 "\t--random-seed: Random seed for generating mutations\n".
-"\t--exclude-positions: A file of positions to exclude when generating random variants (if no parameter is passed select from all positions on reference).\n".
+"\t--repeat-positions: A file of repeat positions to annotate when generating random variants.\n".
 "Example:\n".
-"$0 --reference reference.fasta --num-variant-genomes 10 --num-duplicate-reference-genomes 1 --num-substituions 9000 --num-insertions 500 --num-deletions 500 --random-seed 42 --exclude-positions repeats.tsv | sort -k 1,1 -k 2,2n > variants_table.tsv\n";
+"$0 --reference reference.fasta --num-variant-genomes 10 --num-duplicate-reference-genomes 1 --num-substituions 9000 --num-insertions 500 --num-deletions 500 --random-seed 42 --repeat-positions repeats.tsv | sort -k 1,1 -k 2,2n > variants_table.tsv\n";
 
 my $swap_table = {
 'A' => ['T','G','C'],
@@ -112,6 +112,8 @@ sub print_insertion
 
 sub get_unique_position
 {
+	my ($repeat_positions) = @_;
+
 	my ($sequence_name,$pos,$sequence,$length_sequence);
 
 	# generate unique positions
@@ -131,14 +133,15 @@ sub get_unique_position
 
 	my $seq_string = $sequence->seq;
 	my $ref_base = substr($seq_string,$pos,1);
+	my $in_repeat_region = exists $repeat_positions->{"${sequence_name}_${pos}"};
 
-	return ($sequence_name,$pos,$ref_base);
+	return ($sequence_name,$pos,$ref_base,$in_repeat_region);
 }
 
 ############
 ### MAIN ###
 ############
-my ($ref_file,$num_variant_genomes,$num_duplicate_reference_genomes,$num_substitutions,$num_deletions,$num_insertions,$random_seed, $excluded_positions_file);
+my ($ref_file,$num_variant_genomes,$num_duplicate_reference_genomes,$num_substitutions,$num_deletions,$num_insertions,$random_seed, $repeat_positions_file);
 
 if (!GetOptions('reference=s' => \$ref_file,
                 'num-substitutions=i' => \$num_substitutions,
@@ -147,7 +150,7 @@ if (!GetOptions('reference=s' => \$ref_file,
                 'num-variant-genomes=i' => \$num_variant_genomes,
 		'num-duplicate-reference-genomes=i' => \$num_duplicate_reference_genomes,
                 'random-seed=i' => \$random_seed,
-		'exclude-positions=s' => \$excluded_positions_file)) {
+		'repeat-positions=s' => \$repeat_positions_file)) {
         die "Invalid option\n".$usage;
 }
 
@@ -169,11 +172,12 @@ if (not defined $random_seed) {
 
 srand($random_seed);
 
+my $repeat_positions = {};
 
-if (defined $excluded_positions_file) {
-	print STDERR "Will exclude all positions in $excluded_positions_file\n";
-	my $invalid_positions_parser = InvalidPositions->new;
-	$positions_used = $invalid_positions_parser->read_invalid_positions($excluded_positions_file);
+if (defined $repeat_positions_file) {
+	print STDERR "Will annoate all positions in $repeat_positions_file\n";
+	my $repeat_positions_parser = InvalidPositions->new;
+	$repeat_positions = $repeat_positions_parser->read_invalid_positions($repeat_positions_file);
 }
 
 
@@ -188,10 +192,17 @@ print_header_line($num_duplicate_reference_genomes,$num_variant_genomes,$referen
 # substitution positions
 for (my $pos_num = 0; $pos_num < $num_substitutions; $pos_num++)
 {
-	my ($sequence_name,$pos,$ref_base) = get_unique_position();
+	my ($sequence_name,$pos,$ref_base,$in_repeat_position) = get_unique_position($repeat_positions);
 
 	# print variant line, +1 to position since positions start with 1, not 0
-	print "$sequence_name\t".($pos+1)."\tvalid\t$ref_base";
+	if ($in_repeat_position)
+	{
+		print "$sequence_name\t".($pos+1)."\trepeat,valid\t$ref_base";
+	}
+	else
+	{
+		print "$sequence_name\t".($pos+1)."\tvalid\t$ref_base";
+	}
 
 	# for each duplicate reference genome to generate
 	for (my $i = 0; $i < $num_duplicate_reference_genomes; $i++)
@@ -210,10 +221,17 @@ for (my $pos_num = 0; $pos_num < $num_substitutions; $pos_num++)
 # deletions
 for (my $pos_num = 0; $pos_num < $num_deletions; $pos_num++)
 {
-	my ($sequence_name,$pos,$ref_base) = get_unique_position();
+	my ($sequence_name,$pos,$ref_base,$in_repeat_position) = get_unique_position($repeat_positions);
 
 	# print variant line, +1 to position since positions start with 1, not 0
-	print "$sequence_name\t".($pos+1)."\tdeletion\t$ref_base";
+	if ($in_repeat_position)
+	{
+		print "$sequence_name\t".($pos+1)."\trepeat,deletion\t$ref_base";
+	}
+	else
+	{
+		print "$sequence_name\t".($pos+1)."\tdeletion\t$ref_base";
+	}
 
 	# for each duplicate reference genome to generate
 	for (my $i = 0; $i < $num_duplicate_reference_genomes; $i++)
@@ -242,10 +260,17 @@ for (my $pos_num = 0; $pos_num < $num_deletions; $pos_num++)
 # insertions
 for (my $pos_num = 0; $pos_num < $num_insertions; $pos_num++)
 {
-	my ($sequence_name,$pos,$ref_base) = get_unique_position();
+	my ($sequence_name,$pos,$ref_base,$in_repeat_position) = get_unique_position($repeat_positions);
 
 	# print variant line, +1 to position since positions start with 1, not 0
-	print "$sequence_name\t".($pos+1)."\tinsertion\t$ref_base";
+	if ($in_repeat_position)
+	{
+		print "$sequence_name\t".($pos+1)."\trepeat,insertion\t$ref_base";
+	}
+	else
+	{
+		print "$sequence_name\t".($pos+1)."\tinsertion\t$ref_base";
+	}
 
 	# for each duplicate reference genome to generate
 	for (my $i = 0; $i < $num_duplicate_reference_genomes; $i++)

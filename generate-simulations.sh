@@ -18,7 +18,7 @@ else
 	echo "Generate repeat regions list"
 	perl scripts/find-repeats.pl $reference > $repeats_file
 	echo "Generate variants table"
-	perl scripts/generate_variant_table.pl --reference $reference --num-duplicate-reference-genomes 1 --num-variant-genomes 10 --num-substitutions 9000 --num-insertions 500 --num-deletions 500 --random-seed 42 --exclude-positions $repeats_file | sort -k 1,1 -k 2,2n > $variant_table
+	perl scripts/generate_variant_table.pl --reference $reference --num-duplicate-reference-genomes 1 --num-variant-genomes 10 --num-substitutions 9000 --num-insertions 500 --num-deletions 500 --random-seed 42 --repeat-positions $repeats_file | sort -k 1,1 -k 2,2n > $variant_table
 	echo "Generate reads. See $simulation_dir/generate_genomes.log for details"
 	perl scripts/generate_genomes.pl --reference $reference --variants $variant_table --min-cov 30 --max-cov 60 --random-seed 42 --art-parameters '--noALN --len 250 --rndSeed 43 --paired --seqSys MS --sdev 100 --mflen 500' --out-dir $fastq_dir > $simulation_dir/generate_genomes.log
 	
