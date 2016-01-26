@@ -142,38 +142,37 @@ foreach my $genome_name (sort {$a cmp $b} @genome_names)
 		# for offset to work need to iterate from lowest to highest
 		for my $pos (sort {$a <=> $b} keys %$positions)
 		{
-			# insert mutation at position
-			my $string_pos = $pos - 1; # position in string starts at 0 not 1
+			# insert mutation at position, in string positions start at 0 not 1
+			# must also correct for indel modifications to string previously preformed
+			my $string_pos = $pos + $indel_offset - 1;
 			my $alt = $positions->{$pos}->{'alternative'};
 			my $ref = $positions->{$pos}->{'reference'};
 			my $status = $positions->{$pos}->{'status'};
-			die "error: no alt for $genome_name:$chrom:$pos" if (not defined $alt);
-			die "error: invalid alt=$alt for $genome_name:$chrom:$pos" if ($alt !~ /^[ACTG-]{1,2}$/i);
-			die "error: no status for $genome_name:$chrom:$pos" if (not defined $status);
-			die "error for $genome_name:$chrom:$pos, position out of bounds in file $ref_file" if ($pos > length($seq_string));
+			die "error: no alt for $genome_name:$chrom:$pos:$string_pos" if (not defined $alt);
+			die "error: invalid alt=$alt for $genome_name:$chrom:$pos:$string_pos" if ($alt !~ /^[ACTG-]{1,2}$/i);
+			die "error: no status for $genome_name:$chrom:$pos:$string_pos" if (not defined $status);
+			die "error for $genome_name:$chrom:$pos:$string_pos, position out of bounds in file $ref_file" if ($string_pos >= length($seq_string));
 
-			my $real_ref_base = substr($seq_string,$string_pos+$indel_offset,1);
-			die "error for $genome_name:$chrom:$pos base($real_ref_base) from file $ref_file != base($ref) from file $variants_file" if (lc($real_ref_base) ne lc($ref));
+			my $real_ref_base = substr($seq_string,$string_pos,1);
+			die "error for $genome_name:$chrom:$pos:$string_pos base($real_ref_base) from file $ref_file != base($ref) from file $variants_file" if (lc($real_ref_base) ne lc($ref));
 
 			# for deletion, make sure to delete alt base
 			if ($alt eq '-')
 			{
-				print STDERR "$genome_name:$chrom:$pos:$indel_offset $ref->$alt ".substr($seq_string,$string_pos+$indel_offset-1,3)."\n";
-				substr($seq_string,$string_pos+$indel_offset,1) = ''; # deletion
+				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				substr($seq_string,$string_pos,1) = ''; # deletion
 				$indel_offset--;
-				print STDERR "$genome_name:$chrom:$pos new indel offset $indel_offset\n";
 			}
 			elsif (length($alt) > 1)
 			{
-				print STDERR "$genome_name:$chrom:$pos:$indel_offset $ref->$alt ".substr($seq_string,$string_pos+$indel_offset-1,3)."\n";
-				substr($seq_string,$string_pos+$indel_offset,1) = $alt;
+				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				substr($seq_string,$string_pos,1) = $alt;
 				$indel_offset += length($alt)-1;
-				print STDERR "$genome_name:$chrom:$pos new indel offset $indel_offset\n";
 			}
 			else
 			{
-				print STDERR "$genome_name:$chrom:$pos:$indel_offset $ref->$alt ".substr($seq_string,$string_pos+$indel_offset-1,3)."\n";
-				substr($seq_string,$string_pos+$indel_offset,1) = $alt; # perform mutation (grows sequence string for insertion)
+				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				substr($seq_string,$string_pos,1) = $alt; # perform mutation (grows sequence string for insertion)
 			}
 		}
 
