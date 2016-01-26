@@ -50,31 +50,31 @@ sub read_pos
 	return \%results;
 }
 
-my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --core-genome [core-genome.fasta]\n".
+my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta]\n".
 "Parameters:\n".
 "\t--variants-true: The true variants table.\n".
 "\t--variants-detected: The detected variants table\n".
-"\t--core-genome: The core genome in fasta format.  For most cases this is assumed to be the same as the reference genome\n".
+"\t--reference-genome: The reference genome in fasta format.  This is used to get the length to calculate the false negative rate.\n".
 "Example:\n".
-"$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --core-genome reference.fasta\n\n";
+"$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --reference-genome reference.fasta\n\n";
 
-my ($variants_true_file,$variants_detected_file, $core_genome_file);
+my ($variants_true_file,$variants_detected_file, $reference_genome_file);
 
 if (!GetOptions('variants-true=s' => \$variants_true_file,
 		'variants-detected=s' => \$variants_detected_file,
-		'core-genome=s' => \$core_genome_file))
+		'reference-genome=s' => \$reference_genome_file))
 {
 	die "Invalid option\n".$usage;
 }
 
 die "--variants-true not defined\n$usage" if (not defined $variants_true_file);
 die "--variants-detected not defined\n$usage" if (not defined $variants_detected_file);
-die "--core-genome not defined\n$usage" if (not defined $core_genome_file);
+die "--reference-genome not defined\n$usage" if (not defined $reference_genome_file);
 
-my $core_genome_obj = Bio::SeqIO->new(-file=>"<$core_genome_file", -format=>"fasta");
-my $core_genome_size = 0;
-while (my $seq = $core_genome_obj->next_seq) {
-	$core_genome_size += $seq->length;
+my $reference_genome_obj = Bio::SeqIO->new(-file=>"<$reference_genome_file", -format=>"fasta");
+my $reference_genome_size = 0;
+while (my $seq = $reference_genome_obj->next_seq) {
+	$reference_genome_size += $seq->length;
 }
 
 my $variants_true = read_pos($variants_true_file);
@@ -104,7 +104,7 @@ my $false_positives = $false_positives_set->size;
 # True Negatives are positions in our alignment that have no variant in any genome 
 # That is, the number of positions in the core minus the total variant positions detected.
 # This assumes that our definition of core genome size above is valid.
-my $true_negatives = $core_genome_size - $var_detected_valid_pos->size;
+my $true_negatives = $reference_genome_size - $var_detected_valid_pos->size;
 
 my $false_negatives = $false_negatives_set->size;
 my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
@@ -113,6 +113,6 @@ my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_
 my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 
-print "Core_Genome_File\tCore_Genome\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "$core_genome_file\t$core_genome_size\t$variants_true_file\t$variants_detected_file\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+print "Reference_Genome_File\tReference_Genome_Size\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "$reference_genome_file\t$reference_genome_size\t$variants_true_file\t$variants_detected_file\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
       "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
