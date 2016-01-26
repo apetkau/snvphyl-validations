@@ -221,13 +221,20 @@ for (my $pos_num = 0; $pos_num < $num_deletions; $pos_num++)
 		print_reference($ref_base);
 	}
 
-	# print 1st variant genome with deletion, others with substitutions
-	print_deletion();
+	# pick a random replicate to have a deletion
+	my $replicate_with_deletion = int(rand($num_variant_genomes));
 
 	# for each genome to generate
-	for (my $i = 1; $i < $num_variant_genomes; $i++)
+	for (my $i = 0; $i < $num_variant_genomes; $i++)
 	{
-		print_substitution($ref_base);
+		if ($i == $replicate_with_deletion)
+		{
+			print_deletion();
+		}
+		else
+		{
+			print_substitution($ref_base);
+		}
 	}
 	print "\n";
 }
@@ -246,12 +253,18 @@ for (my $pos_num = 0; $pos_num < $num_insertions; $pos_num++)
 		print_reference($ref_base);
 	}
 
-	# print 1st variant genome with an insertion, others with substitutions
-	print_insertions($ref_base);
+	my $replicate_with_insertion = int(rand($num_variant_genomes));
 
-	for (my $i = 1; $i < $num_variant_genomes; $i++)
+	for (my $i = 0; $i < $num_variant_genomes; $i++)
 	{
-		print_substitution($ref_base);
+		if ($i == $replicate_with_insertion)
+		{
+			print_insertion($ref_base);
+		}
+		else
+		{
+			print_substitution($ref_base);
+		}
 	}
 	print "\n";
 }
