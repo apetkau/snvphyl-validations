@@ -29,6 +29,7 @@ sub read_pos
 	$results{'header'} = $header;
 	$results{'positions-valid'} = Set::Scalar->new;
 	$results{'positions-invalid'} = Set::Scalar->new;
+	$results{'positions-all'} = Set::Scalar->new;
 	while(my $line = readline($fh))
 	{
 		chomp($line);
@@ -39,6 +40,7 @@ sub read_pos
 		die "Error with line $line in $file, status not properly defined\n" if (not defined $status or $status eq '');
 
 		my $line_minus_status = join(' ',$chrom,$position,@bases);
+		$results{'positions-all'}->insert($line_minus_status);
 		if ($status eq 'valid') {
 			$results{'positions-valid'}->insert($line_minus_status);
 		} else {
@@ -48,6 +50,38 @@ sub read_pos
 	close($fh);
 
 	return \%results;
+}
+
+sub get_comparisons
+{
+	my ($var_true_pos,$var_detected_pos,$reference_genome_size) = @_;
+
+	# set operations
+	my $true_positives_set = $var_true_pos * $var_detected_pos;
+	my $false_positives_set = $var_detected_pos - $var_true_pos;
+	# See comment for true negatives below
+	#my $true_negatives_set;
+	my $false_negatives_set = $var_true_pos - $var_detected_pos;
+	
+	my $true_valid_positives = $var_true_pos->size;
+	my $detected_valid_positives = $var_detected_pos->size;
+	my $true_positives = $true_positives_set->size;
+	my $false_positives = $false_positives_set->size;
+	
+	# True Negatives are positions in our alignment that have no variant in any genome 
+	# That is, the number of positions in the core minus the total variant positions detected.
+	# This assumes that our definition of core genome size above is valid.
+	my $true_negatives = $reference_genome_size - $var_detected_pos->size;
+	
+	my $false_negatives = $false_negatives_set->size;
+	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
+	my $specificity = sprintf "%0.4f",($true_negatives) / ($true_negatives + $false_positives);
+	my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_negatives);
+	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
+	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
+	
+	return "$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate";
 }
 
 my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta]\n".
@@ -87,32 +121,7 @@ if ($variants_true->{'header'} ne $variants_detected->{'header'})
 }
 
 my $var_true_valid_pos = $variants_true->{'positions-valid'};
-my $var_detected_valid_pos = $variants_detected->{'positions-valid'};
-
-# set operations
-my $true_positives_set = $var_true_valid_pos * $var_detected_valid_pos;
-my $false_positives_set = $var_detected_valid_pos - $var_true_valid_pos;
-# See comment for true negatives below
-#my $true_negatives_set;
-my $false_negatives_set = $var_true_valid_pos - $var_detected_valid_pos;
-
-my $true_valid_positives = $var_true_valid_pos->size;
-my $detected_valid_positives = $var_detected_valid_pos->size;
-my $true_positives = $true_positives_set->size;
-my $false_positives = $false_positives_set->size;
-
-# True Negatives are positions in our alignment that have no variant in any genome 
-# That is, the number of positions in the core minus the total variant positions detected.
-# This assumes that our definition of core genome size above is valid.
-my $true_negatives = $reference_genome_size - $var_detected_valid_pos->size;
-
-my $false_negatives = $false_negatives_set->size;
-my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
-my $specificity = sprintf "%0.4f",($true_negatives) / ($true_negatives + $false_positives);
-my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_negatives);
-my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
-my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
+my $var_detected_pos = $variants_detected->{'positions-valid'};
 
 print "Reference_Genome_File\tReference_Genome_Size\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "$reference_genome_file\t$reference_genome_size\t$variants_true_file\t$variants_detected_file\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
-      "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
+print "$reference_genome_file\t$reference_genome_size\t$variants_true_file\t$variants_detected_file\t".get_comparisons($variants_true->{'positions-valid'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
