@@ -55,17 +55,14 @@ my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variant
 "\t--variants-true: The true variants table.\n".
 "\t--variants-detected: The detected variants table\n".
 "\t--reference-genome: The reference genome in fasta format.  This is used to get the length to calculate the false negative rate.\n".
-"\t--include-all-detected: Whether to include all positions detected or only those used for a SNV alignment and phylogeny\n".
 "Example:\n".
 "$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --reference-genome reference.fasta\n\n";
 
 my ($variants_true_file,$variants_detected_file, $reference_genome_file);
-my $include_all_detected = 0;
 
 if (!GetOptions('variants-true=s' => \$variants_true_file,
 		'variants-detected=s' => \$variants_detected_file,
-		'reference-genome=s' => \$reference_genome_file,
-		'include-all-detected' => \$include_all_detected))
+		'reference-genome=s' => \$reference_genome_file))
 {
 	die "Invalid option\n".$usage;
 }
@@ -89,8 +86,8 @@ if ($variants_true->{'header'} ne $variants_detected->{'header'})
 	die "Error: headers did not match\n";
 }
 
-my $var_true_valid_pos = $variants_true->{'positions-valid'} + $variants_true->{'positions-invalid'};
-my $var_detected_valid_pos = ($include_all_detected) ? ($variants_detected->{'positions-valid'} + $variants_detected->{'positions-invalid'}) : $variants_detected->{'positions-valid'};
+my $var_true_valid_pos = $variants_true->{'positions-valid'};
+my $var_detected_valid_pos = $variants_detected->{'positions-valid'};
 
 # set operations
 my $true_positives_set = $var_true_valid_pos * $var_detected_valid_pos;
@@ -116,6 +113,6 @@ my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_
 my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 
-print "Reference_Genome_File\tReference_Genome_Size\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\tInclude_All_Detected\n";
+print "Reference_Genome_File\tReference_Genome_Size\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
 print "$reference_genome_file\t$reference_genome_size\t$variants_true_file\t$variants_detected_file\t$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
-      "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\t".($include_all_detected ? 'Yes' : 'No')."\n";
+      "$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
