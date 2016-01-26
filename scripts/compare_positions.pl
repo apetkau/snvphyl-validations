@@ -123,5 +123,11 @@ if ($variants_true->{'header'} ne $variants_detected->{'header'})
 my $var_true_valid_pos = $variants_true->{'positions-valid'};
 my $var_detected_pos = $variants_detected->{'positions-valid'};
 
-print "Reference_Genome_File\tReference_Genome_Size\tVariants_True_File\tVariants_Detected_File\tTrue_Variants\tVariants_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "$reference_genome_file\t$reference_genome_size\t$variants_true_file\t$variants_detected_file\t".get_comparisons($variants_true->{'positions-valid'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
+print "Reference_Genome_File\t$reference_genome_file\n";
+print "Reference_Genome_Size\t$reference_genome_size\n";
+print "Variants_True_File\t$variants_true_file\n";
+print "Variants_Detected_File\t$variants_detected_file\n";
+print "Case\tTrue_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "all-vs-valid\t".get_comparisons($variants_true->{'positions-all'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
+print "valid-vs-valid\t".get_comparisons($variants_true->{'positions-valid'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
+print "all-vs-all\t".get_comparisons($variants_true->{'positions-all'}, $variants_detected->{'positions-all'}, $reference_genome_size)."\n";
