@@ -159,19 +159,19 @@ foreach my $genome_name (sort {$a cmp $b} @genome_names)
 			# for deletion, make sure to delete alt base
 			if ($alt eq '-')
 			{
-				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				#print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
 				substr($seq_string,$string_pos,1) = ''; # deletion
 				$indel_offset--;
 			}
 			elsif (length($alt) > 1)
 			{
-				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				#print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
 				substr($seq_string,$string_pos,1) = $alt;
 				$indel_offset += length($alt)-1;
 			}
 			else
 			{
-				print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
+				#print STDERR "$genome_name:$chrom:$pos:$string_pos $ref->$alt ".substr($seq_string,$string_pos-1,3)."\n";
 				substr($seq_string,$string_pos,1) = $alt; # perform mutation (grows sequence string for insertion)
 			}
 		}
