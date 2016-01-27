@@ -9,17 +9,26 @@ use Bio::SeqIO;
 use Set::Scalar;
 use Getopt::Long;
 
-# read positions file a Set::Scalar object
-# format
+# read positions file to a set of Set::Scalar objects
+# Input
+#	$file  File to read positions from
+#	$position_set_to_remove  Optional set of "$chrom\t$pos" coordinates to use when generating {'columns-valid-removed-positions'}
+# Output
+#	A hash table of sets of coordinates and lines (with positions/base information) in the format below.
 # {
 #	'header' => header_line,
 # 	'columns-valid' => Set of position lines with 'valid' status
-#	'columns-invalid' => Set of position lines with 'invalid' status
+#	'columns-invalid' => Set of position lines which do not have a 'valid' status
 #	'columns-all' => Set of all position lines
+#	'columns-valid-removed-positions' => Set of position lines minus any lines with coordinates passed in $position_set_to_remove
+#	'positions-valid' => Set of position coordinates with 'valid' status
+#	'positions-invalid' => Set of position coordinates which do not have a 'valid' status
 # }
 sub read_pos
 {
-	my ($file) = @_;
+	my ($file, $position_set_to_remove) = @_;
+
+	$position_set_to_remove = Set::Scalar->new if (not defined $position_set_to_remove);
 
 	my %results;
 
@@ -29,8 +38,11 @@ sub read_pos
 	die "Error with header line: $header\n" if ($header !~ /^#/);
 	$results{'header'} = $header;
 	$results{'columns-valid'} = Set::Scalar->new;
+	$results{'columns-valid-removed-positions'} = Set::Scalar->new;
 	$results{'columns-invalid'} = Set::Scalar->new;
 	$results{'columns-all'} = Set::Scalar->new;
+	$results{'positions-valid'} = Set::Scalar->new;
+	$results{'positions-invalid'} = Set::Scalar->new;
 	while(my $line = readline($fh))
 	{
 		chomp($line);
@@ -44,8 +56,17 @@ sub read_pos
 		$results{'columns-all'}->insert($line_minus_status);
 		if ($status eq 'valid') {
 			$results{'columns-valid'}->insert($line_minus_status);
-		} else {
+			$results{'positions-valid'}->insert("$chrom\t$position");
+
+			if (not $position_set_to_remove->has("$chrom\t$position"))
+			{
+				$results{'columns-valid-removed-positions'}->insert($line_minus_status);
+			}
+		}
+		else
+		{
 			$results{'columns-invalid'}->insert($line_minus_status);
+			$results{'positions-invalid'}->insert("$chrom\t$position");
 		}
 	}
 	close($fh);
@@ -112,17 +133,14 @@ while (my $seq = $reference_genome_obj->next_seq) {
 	$reference_genome_size += $seq->length;
 }
 
-my $variants_true = read_pos($variants_true_file);
 my $variants_detected = read_pos($variants_detected_file);
+my $variants_true = read_pos($variants_true_file, $variants_detected->{'positions-invalid'});
 
 # must have same genomes and same order of genomes
 if ($variants_true->{'header'} ne $variants_detected->{'header'})
 {
 	die "Error: headers did not match\n";
 }
-
-my $var_true_valid_pos = $variants_true->{'columns-valid'};
-my $var_detected_pos = $variants_detected->{'columns-valid'};
 
 print "Reference_Genome_File\t$reference_genome_file\n";
 print "Reference_Genome_Size\t$reference_genome_size\n";
@@ -131,4 +149,5 @@ print "Variants_Detected_File\t$variants_detected_file\n";
 print "Case\tTrue_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
 print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
 print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
+print "all-minus-detected-invalid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-removed-positions'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
 print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $reference_genome_size)."\n";
