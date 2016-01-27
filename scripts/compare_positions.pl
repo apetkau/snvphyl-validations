@@ -87,7 +87,7 @@ sub read_pos
 
 sub get_comparisons
 {
-	my ($var_true_pos,$var_detected_pos,$reference_genome_size) = @_;
+	my ($var_true_pos,$var_detected_pos,$true_nonvariant_columns) = @_;
 
 	# set operations
 	my $true_positives_set = $var_true_pos * $var_detected_pos;
@@ -100,11 +100,8 @@ sub get_comparisons
 	my $detected_valid_positives = $var_detected_pos->size;
 	my $true_positives = $true_positives_set->size;
 	my $false_positives = $false_positives_set->size;
-	
-	# True Negatives are columns in our alignment that have no variant in any genome 
-	# That is, the number of columns in the core minus the total variant columns detected.
-	# This assumes that our definition of core genome size above is valid.
-	my $true_negatives = $reference_genome_size - $var_detected_pos->size;
+
+	my $true_negatives = $true_nonvariant_columns - $var_detected_pos->size;
 	
 	my $false_negatives = $false_negatives_set->size;
 	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
@@ -113,7 +110,7 @@ sub get_comparisons
 	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 	
-	return "$true_valid_positives\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+	return "$true_valid_positives\t$true_nonvariant_columns\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
 		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate";
 }
 
@@ -147,6 +144,8 @@ while (my $seq = $reference_genome_obj->next_seq) {
 my $variants_detected = read_pos($variants_detected_file);
 my $variants_true = read_pos($variants_true_file, $variants_detected->{'positions-invalid'});
 
+my $true_nonvariant_columns = $reference_genome_size - $variants_true->{'columns-all'}->size;
+
 # must have same genomes and same order of genomes
 if ($variants_true->{'header'} ne $variants_detected->{'header'})
 {
@@ -157,9 +156,9 @@ print "Reference_Genome_File\t$reference_genome_file\n";
 print "Reference_Genome_Size\t$reference_genome_size\n";
 print "Variants_True_File\t$variants_true_file\n";
 print "Variants_Detected_File\t$variants_detected_file\n";
-print "Case\tTrue_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
-print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
-print "all-minus-detected-invalid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-removed-positions'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
-print "detected-invalid-vs-invalid\t".get_comparisons($variants_true->{'columns-removed-positions'}, $variants_detected->{'columns-invalid'}, $reference_genome_size)."\n";
-print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $reference_genome_size)."\n";
+print "Case\tTrue_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
+print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
+print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
+print "all-minus-detected-invalid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-removed-positions'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
+print "detected-invalid-vs-invalid\t".get_comparisons($variants_true->{'columns-removed-positions'}, $variants_detected->{'columns-invalid'}, $true_nonvariant_columns)."\n";
+print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns)."\n";
