@@ -21,6 +21,7 @@ use Getopt::Long;
 #	'columns-invalid' => Set of position lines which do not have a 'valid' status
 #	'columns-all' => Set of all position lines
 #	'columns-valid-removed-positions' => Set of position lines minus any lines with coordinates passed in $position_set_to_remove
+#	'columns-removed-positions' => Set of position lines that would have been removed by coordinates passed in $position_set_to_remove
 #	'positions-valid' => Set of position coordinates with 'valid' status
 #	'positions-invalid' => Set of position coordinates which do not have a 'valid' status
 # }
@@ -39,6 +40,7 @@ sub read_pos
 	$results{'header'} = $header;
 	$results{'columns-valid'} = Set::Scalar->new;
 	$results{'columns-valid-removed-positions'} = Set::Scalar->new;
+	$results{'columns-removed-positions'} = Set::Scalar->new;
 	$results{'columns-invalid'} = Set::Scalar->new;
 	$results{'columns-all'} = Set::Scalar->new;
 	$results{'positions-valid'} = Set::Scalar->new;
@@ -58,13 +60,22 @@ sub read_pos
 			$results{'columns-valid'}->insert($line_minus_status);
 			$results{'positions-valid'}->insert("$chrom\t$position");
 
-			if (not $position_set_to_remove->has("$chrom\t$position"))
+			if ($position_set_to_remove->has("$chrom\t$position"))
+			{
+				$results{'columns-removed-positions'}->insert($line_minus_status);
+			}
+			else
 			{
 				$results{'columns-valid-removed-positions'}->insert($line_minus_status);
 			}
 		}
 		else
 		{
+			if ($position_set_to_remove->has("$chrom\t$position"))
+                        {
+				$results{'columns-removed-positions'}->insert($line_minus_status);
+			}
+
 			$results{'columns-invalid'}->insert($line_minus_status);
 			$results{'positions-invalid'}->insert("$chrom\t$position");
 		}
@@ -150,4 +161,5 @@ print "Case\tTrue_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecifici
 print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
 print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
 print "all-minus-detected-invalid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-removed-positions'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
+print "detected-invalid-vs-invalid\t".get_comparisons($variants_true->{'columns-removed-positions'}, $variants_detected->{'columns-invalid'}, $reference_genome_size)."\n";
 print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $reference_genome_size)."\n";
