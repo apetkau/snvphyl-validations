@@ -13,8 +13,9 @@ use Getopt::Long;
 # format
 # {
 #	'header' => header_line,
-# 	'positions-valid' => Set of position lines with 'valid' status
-#	'positions-invalid' => Set of position lines with 'invalid' status
+# 	'columns-valid' => Set of position lines with 'valid' status
+#	'columns-invalid' => Set of position lines with 'invalid' status
+#	'columns-all' => Set of all position lines
 # }
 sub read_pos
 {
@@ -27,9 +28,9 @@ sub read_pos
 	chomp($header);
 	die "Error with header line: $header\n" if ($header !~ /^#/);
 	$results{'header'} = $header;
-	$results{'positions-valid'} = Set::Scalar->new;
-	$results{'positions-invalid'} = Set::Scalar->new;
-	$results{'positions-all'} = Set::Scalar->new;
+	$results{'columns-valid'} = Set::Scalar->new;
+	$results{'columns-invalid'} = Set::Scalar->new;
+	$results{'columns-all'} = Set::Scalar->new;
 	while(my $line = readline($fh))
 	{
 		chomp($line);
@@ -40,11 +41,11 @@ sub read_pos
 		die "Error with line $line in $file, status not properly defined\n" if (not defined $status or $status eq '');
 
 		my $line_minus_status = join(' ',$chrom,$position,@bases);
-		$results{'positions-all'}->insert($line_minus_status);
+		$results{'columns-all'}->insert($line_minus_status);
 		if ($status eq 'valid') {
-			$results{'positions-valid'}->insert($line_minus_status);
+			$results{'columns-valid'}->insert($line_minus_status);
 		} else {
-			$results{'positions-invalid'}->insert($line_minus_status);
+			$results{'columns-invalid'}->insert($line_minus_status);
 		}
 	}
 	close($fh);
@@ -68,8 +69,8 @@ sub get_comparisons
 	my $true_positives = $true_positives_set->size;
 	my $false_positives = $false_positives_set->size;
 	
-	# True Negatives are positions in our alignment that have no variant in any genome 
-	# That is, the number of positions in the core minus the total variant positions detected.
+	# True Negatives are columns in our alignment that have no variant in any genome 
+	# That is, the number of columns in the core minus the total variant columns detected.
 	# This assumes that our definition of core genome size above is valid.
 	my $true_negatives = $reference_genome_size - $var_detected_pos->size;
 	
@@ -120,14 +121,14 @@ if ($variants_true->{'header'} ne $variants_detected->{'header'})
 	die "Error: headers did not match\n";
 }
 
-my $var_true_valid_pos = $variants_true->{'positions-valid'};
-my $var_detected_pos = $variants_detected->{'positions-valid'};
+my $var_true_valid_pos = $variants_true->{'columns-valid'};
+my $var_detected_pos = $variants_detected->{'columns-valid'};
 
 print "Reference_Genome_File\t$reference_genome_file\n";
 print "Reference_Genome_Size\t$reference_genome_size\n";
 print "Variants_True_File\t$variants_true_file\n";
 print "Variants_Detected_File\t$variants_detected_file\n";
 print "Case\tTrue_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "all-vs-valid\t".get_comparisons($variants_true->{'positions-all'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
-print "valid-vs-valid\t".get_comparisons($variants_true->{'positions-valid'}, $variants_detected->{'positions-valid'}, $reference_genome_size)."\n";
-print "all-vs-all\t".get_comparisons($variants_true->{'positions-all'}, $variants_detected->{'positions-all'}, $reference_genome_size)."\n";
+print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
+print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $reference_genome_size)."\n";
+print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $reference_genome_size)."\n";
