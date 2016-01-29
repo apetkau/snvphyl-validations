@@ -197,11 +197,11 @@ for (my $pos_num = 0; $pos_num < $num_substitutions; $pos_num++)
 	# print variant line, +1 to position since positions start with 1, not 0
 	if ($in_repeat_position)
 	{
-		print "$sequence_name\t".($pos+1)."\trepeat,valid\t$ref_base";
+		print "$sequence_name\t".($pos+1)."\trepeat,substitution\t$ref_base";
 	}
 	else
 	{
-		print "$sequence_name\t".($pos+1)."\tvalid\t$ref_base";
+		print "$sequence_name\t".($pos+1)."\tvalid,substitution\t$ref_base";
 	}
 
 	# for each duplicate reference genome to generate
@@ -230,7 +230,7 @@ for (my $pos_num = 0; $pos_num < $num_deletions; $pos_num++)
 	}
 	else
 	{
-		print "$sequence_name\t".($pos+1)."\tdeletion\t$ref_base";
+		print "$sequence_name\t".($pos+1)."\tvalid,deletion\t$ref_base";
 	}
 
 	# for each duplicate reference genome to generate
@@ -269,7 +269,7 @@ for (my $pos_num = 0; $pos_num < $num_insertions; $pos_num++)
 	}
 	else
 	{
-		print "$sequence_name\t".($pos+1)."\tinsertion\t$ref_base";
+		print "$sequence_name\t".($pos+1)."\tvalid,insertion\t$ref_base";
 	}
 
 	# for each duplicate reference genome to generate
