@@ -20,9 +20,9 @@ my $usage =
 "\t--reference:  A reference genome in FASTA format\n".
 "\t--num-variant-genomes: Number of genomes with variation to include in the table\n".
 "\t--num-duplicate-reference-genomes: Number of genomes identical to the reference to include in the table\n".
-"\t--num-substitutions: Number of substitution positions to generate in table\n".
-"\t--num-insertions: Number of insertion positions to generate in table\n".
-"\t--num-deletions: Number of deletion positions to generate in table\n".
+"\t--num-substitutions: Number of all substitution positions to generate in table\n".
+"\t--num-insertions: Number of single insertion and other substitution positions to generate in table\n".
+"\t--num-deletions: Number of single deletion and all other substitution positions to generate in table\n".
 "\t--random-seed: Random seed for generating mutations\n".
 "\t--repeat-positions: A file of repeat positions to annotate when generating random variants.\n".
 "Example:\n".
@@ -107,7 +107,7 @@ sub print_insertion
 	my ($base) = @_;
 
 	my $newbase = get_mutated_base($base);
-	print "\t${base}${newbase}";
+	print "\t${newbase}${base}";
 }
 
 sub get_unique_position
@@ -175,7 +175,7 @@ srand($random_seed);
 my $repeat_positions = {};
 
 if (defined $repeat_positions_file) {
-	print STDERR "Will annoate all positions in $repeat_positions_file\n";
+	print STDERR "Will mark all positions in $repeat_positions_file as repeats\n";
 	my $repeat_positions_parser = InvalidPositions->new;
 	$repeat_positions = $repeat_positions_parser->read_invalid_positions($repeat_positions_file);
 }
