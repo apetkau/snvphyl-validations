@@ -31,7 +31,7 @@ else
 	echo "Reads in $fastq_dir/*.fastq"
 fi
 
-genome=2011C-3609
+genome=2011C-3609_30-60
 dir=simulations
 reference=references/2011C-3609.fasta
 simulation_dir=$dir/$genome
@@ -49,9 +49,9 @@ else
 	echo "Generate repeat regions list"
 	perl scripts/find-repeats.pl -l 150 -p 90 $reference > $repeats_file
 	echo "Generate variants table"
-	perl scripts/generate_variant_table.pl --reference $reference --num-duplicate-reference-genomes 1 --num-variant-genomes 10 --num-substitutions 10000 --num-insertions 0 --num-deletions 0 --random-seed 42 --repeat-positions $repeats_file | sort -k 1,1 -k 2,2n > $variant_table
+	perl scripts/generate_variant_table.pl --reference $reference --num-duplicate-reference-genomes 1 --num-variant-genomes 10 --num-substitutions 9800 --num-insertions 100 --num-deletions 100 --random-seed 42 --repeat-positions $repeats_file | sort -k 1,1 -k 2,2n > $variant_table
 	echo "Generate reads. See $simulation_dir/generate_genomes.log for details"
-	perl scripts/generate_genomes.pl --reference $reference --variants $variant_table --min-cov 50 --max-cov 50 --random-seed 42 --art-parameters '--noALN --len 250 --rndSeed 43 --paired --seqSys MS --sdev 100 --mflen 500' --out-dir $fastq_dir > $simulation_dir/generate_genomes.log
+	perl scripts/generate_genomes.pl --reference $reference --variants $variant_table --min-cov 30 --max-cov 60 --random-seed 42 --art-parameters '--noALN --len 250 --rndSeed 43 --paired --seqSys MS --sdev 100 --mflen 500' --out-dir $fastq_dir > $simulation_dir/generate_genomes.log
 	
 	mkdir $fastq_dir/log
 	mv $fastq_dir/*.log $fastq_dir/log
