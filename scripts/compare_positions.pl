@@ -9,6 +9,21 @@ use Bio::SeqIO;
 use Set::Scalar;
 use Getopt::Long;
 
+sub is_substitution
+{
+	return ($_[0] =~ /substitution$/);
+}
+
+sub is_insertion
+{
+	return ($_[0] =~ /insertion$/);
+}
+
+sub is_deletion
+{
+	return ($_[0] =~ /deletion$/);
+}
+
 # read positions file to a set of Set::Scalar objects
 # Input
 #	$file  File to read positions from
@@ -25,7 +40,7 @@ use Getopt::Long;
 #	'positions-valid' => Set of position coordinates with 'valid' status
 #	'positions-invalid' => Set of position coordinates which do not have a 'valid' status
 # }
-sub read_pos
+sub read_pos_true_variants_table
 {
 	my ($file, $position_set_to_remove) = @_;
 
@@ -38,44 +53,88 @@ sub read_pos
 	chomp($header);
 	die "Error with header line: $header\n" if ($header !~ /^#/);
 	$results{'header'} = $header;
+
+	# Sets for columns in an alignment in all regions with the appropriate status
+	$results{'columns-all'} = Set::Scalar->new;
+	$results{'columns-all-substitutions'} = Set::Scalar->new;
+	$results{'columns-all-deletions'} = Set::Scalar->new;
+	$results{'columns-all-insertions'} = Set::Scalar->new;
+
+	# Sets for columns in an alignment in non-repeat regions with the appropriate status
 	$results{'columns-valid'} = Set::Scalar->new;
-	$results{'columns-valid-removed-positions'} = Set::Scalar->new;
-	$results{'columns-removed-positions'} = Set::Scalar->new;
+	$results{'columns-valid-substitutions'} = Set::Scalar->new;
+	$results{'columns-valid-deletions'} = Set::Scalar->new;
+	$results{'columns-valid-insertions'} = Set::Scalar->new;
+
+	$results{'positions-all-substitutions'} = Set::Scalar->new;
+	$results{'positions-all-insertions'} = Set::Scalar->new;
+	$results{'positions-all-deletions'} = Set::Scalar->new;
+
+	while(my $line = readline($fh))
+	{
+		my ($chrom,$position,$status,$line_minus_status) = parse_pos_line($line);
+
+		$results{'columns-all'}->insert($line_minus_status);
+		$results{'columns-all-substitutions'}->insert($line_minus_status) if (is_substitution($status));
+		$results{'columns-all-deletions'}->insert($line_minus_status) if (is_deletion($status));
+		$results{'columns-all-insertions'}->insert($line_minus_status) if (is_insertion($status));
+		
+		if ($status =~ /^valid/)
+		{
+			$results{'columns-valid'}->insert($line_minus_status);
+			$results{'columns-valid-substitutions'}->insert($line_minus_status) if (is_substitution($status));
+			$results{'columns-valid-deletions'}->insert($line_minus_status) if (is_deletion($status));
+			$results{'columns-valid-insertions'}->insert($line_minus_status) if (is_insertion($status));
+		}
+	}
+	close($fh);
+
+	return \%results;
+}
+
+sub parse_pos_line
+{
+	my ($line) = @_;
+
+	chomp($line);
+	my @tokens = split(/\t/,$line);
+
+	my ($chrom,$position,$status,@bases) = @tokens;
+	die "Error with line $line\n" if (not defined $chrom or not defined $position or $position !~ /\d+/);
+	die "Error with line $line, status not properly defined\n" if (not defined $status or $status eq '');
+	my $line_minus_status = join(' ',$chrom,$position,@bases);
+
+	return ($chrom,$position,$status,$line_minus_status);
+}
+
+sub read_pos_actual_variants_table
+{
+	my ($file) = @_;
+
+	my %results;
+
+	open(my $fh,"<$file") or die "Could not open $file\n";
+	my $header = readline($fh);
+	chomp($header);
+	die "Error with header line: $header\n" if ($header !~ /^#/);
+	$results{'header'} = $header;
+	$results{'columns-valid'} = Set::Scalar->new;
 	$results{'columns-invalid'} = Set::Scalar->new;
 	$results{'columns-all'} = Set::Scalar->new;
 	$results{'positions-valid'} = Set::Scalar->new;
 	$results{'positions-invalid'} = Set::Scalar->new;
 	while(my $line = readline($fh))
 	{
-		chomp($line);
-		my @tokens = split(/\t/,$line);
+		my ($chrom,$position,$status,$line_minus_status) = parse_pos_line($line);
 
-		my ($chrom,$position,$status,@bases) = @tokens;
-		die "Error with line $line in $file\n" if (not defined $chrom or not defined $position or $position !~ /\d+/);
-		die "Error with line $line in $file, status not properly defined\n" if (not defined $status or $status eq '');
-
-		my $line_minus_status = join(' ',$chrom,$position,@bases);
 		$results{'columns-all'}->insert($line_minus_status);
-		if ($status eq 'valid') {
+		if ($status eq 'valid')
+		{
 			$results{'columns-valid'}->insert($line_minus_status);
 			$results{'positions-valid'}->insert("$chrom\t$position");
-
-			if ($position_set_to_remove->has("$chrom\t$position"))
-			{
-				$results{'columns-removed-positions'}->insert($line_minus_status);
-			}
-			else
-			{
-				$results{'columns-valid-removed-positions'}->insert($line_minus_status);
-			}
 		}
 		else
 		{
-			if ($position_set_to_remove->has("$chrom\t$position"))
-                        {
-				$results{'columns-removed-positions'}->insert($line_minus_status);
-			}
-
 			$results{'columns-invalid'}->insert($line_minus_status);
 			$results{'positions-invalid'}->insert("$chrom\t$position");
 		}
@@ -87,21 +146,19 @@ sub read_pos
 
 sub get_comparisons
 {
-	my ($var_true_pos,$var_detected_pos,$true_nonvariant_columns) = @_;
+	my ($var_true_col,$var_detected_col,$true_nonvariant_columns) = @_;
 
 	# set operations
-	my $true_positives_set = $var_true_pos * $var_detected_pos;
-	my $false_positives_set = $var_detected_pos - $var_true_pos;
-	# See comment for true negatives below
-	#my $true_negatives_set;
-	my $false_negatives_set = $var_true_pos - $var_detected_pos;
+	my $true_positives_set = $var_true_col * $var_detected_col;
+	my $false_positives_set = $var_detected_col - $var_true_col;
+	my $false_negatives_set = $var_true_col - $var_detected_col;
 	
-	my $true_valid_positives = $var_true_pos->size;
-	my $detected_valid_positives = $var_detected_pos->size;
+	my $true_col_positives = $var_true_col->size;
+	my $detected_col_positives = $var_detected_col->size;
 	my $true_positives = $true_positives_set->size;
 	my $false_positives = $false_positives_set->size;
 
-	my $true_negatives = $true_nonvariant_columns - $var_detected_pos->size;
+	my $true_negatives = $true_nonvariant_columns - $var_detected_col->size;
 	
 	my $false_negatives = $false_negatives_set->size;
 	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
@@ -110,8 +167,9 @@ sub get_comparisons
 	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 	
-	return "$true_valid_positives\t$true_nonvariant_columns\t$detected_valid_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
-		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate";
+	return {'names' => "True_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate",
+		'values' => "$true_col_positives\t$true_nonvariant_columns\t$detected_col_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate"};
 }
 
 my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta]\n".
@@ -141,8 +199,8 @@ while (my $seq = $reference_genome_obj->next_seq) {
 	$reference_genome_size += $seq->length;
 }
 
-my $variants_detected = read_pos($variants_detected_file);
-my $variants_true = read_pos($variants_true_file, $variants_detected->{'positions-invalid'});
+my $variants_true = read_pos_true_variants_table($variants_true_file);
+my $variants_detected = read_pos_actual_variants_table($variants_detected_file);
 
 my $true_nonvariant_columns = $reference_genome_size - $variants_true->{'columns-all'}->size;
 
@@ -156,9 +214,16 @@ print "Reference_Genome_File\t$reference_genome_file\n";
 print "Reference_Genome_Size\t$reference_genome_size\n";
 print "Variants_True_File\t$variants_true_file\n";
 print "Variants_Detected_File\t$variants_detected_file\n";
-print "Case\tTrue_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFP_Rate\n";
-print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
-print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
-print "all-minus-detected-invalid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-removed-positions'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns)."\n";
-print "detected-invalid-vs-invalid\t".get_comparisons($variants_true->{'columns-removed-positions'}, $variants_detected->{'columns-invalid'}, $true_nonvariant_columns)."\n";
-print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns)."\n";
+my $substitution_comparisons = get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns);
+#my $insertion_comparisons = get_comparisons($variants_true->{'columns-valid-insertions'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns);
+#my $deletion_comparisons = get_comparisons($variants_true->{'columns-valid-deletions'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns);
+
+print $substitution_comparisons->{'names'},"\n";
+print $substitution_comparisons->{'values'},"\n";
+#print $insertion_comparisons->{'names'},"\n";
+#print $insertion_comparisons->{'values'},"\n";
+#print $deletion_comparisons->{'names'},"\n";
+#print $deletion_comparisons->{'values'},"\n";
+#print "all-vs-valid\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid-substitutions'}, $true_nonvariant_columns)."\n";
+#print "valid-vs-valid\t".get_comparisons($variants_true->{'columns-valid-substitutions'}, $variants_detected->{'columns-valid-substitutions'}, $true_nonvariant_columns)."\n";
+#print "all-vs-all\t".get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns)."\n";
