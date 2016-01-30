@@ -105,6 +105,35 @@ sub read_pos_true_variants_table
 	return \%results;
 }
 
+sub intersect_columns_by_position
+{
+	my ($columns_a, $columns_b) = @_;
+
+	my $intersection = Set::Scalar->new;
+
+	# generate a table which the combined chromosome/position acts as a key to point to the column line
+	my %columns_a_table = ();
+	for my $e ($columns_a->elements)
+	{
+		my ($chrom,$pos) = split(/\s/, $e);
+		$columns_a_table{"$chrom\t$pos"} = $e;
+	}
+	my %columns_b_table = ();
+	for my $e ($columns_b->elements)
+	{
+		my ($chrom,$pos) = split(/\s/, $e);
+		$columns_b_table{"$chrom\t$pos"} = $e;
+	}
+
+	# for every position in table a, add full line to intersection if it exists in table b
+	for my $k (keys %columns_a_table)
+	{
+		$intersection->insert($columns_b_table{$k}) if (exists $columns_b_table{$k});
+	}
+
+	return $intersection;
+}
+
 sub parse_pos_line
 {
 	my ($line) = @_;
@@ -137,12 +166,19 @@ sub read_pos_actual_variants_table
 	$results{'columns-valid'}{'deletions'} = Set::Scalar->new;
 	$results{'columns-invalid'}{'all'} = Set::Scalar->new;
 	$results{'columns-all'}{'all'} = Set::Scalar->new;
+	$results{'columns-all'}{'substitutions'} = Set::Scalar->new;
+	$results{'columns-all'}{'insertions'} = Set::Scalar->new;
+	$results{'columns-all'}{deletions} = Set::Scalar->new;
 	while(my $line = readline($fh))
 	{
 		my ($chrom,$position,$status,$line_minus_status) = parse_pos_line($line);
 		my $chrom_pos = "$chrom\t$position";
 
 		$results{'columns-all'}{'all'}->insert($line_minus_status);
+		$results{'columns-all'}{'substitutions'}->insert($line_minus_status) if ($substitutions_pos->has($chrom_pos));
+		$results{'columns-all'}{'insertions'}->insert($line_minus_status) if ($insertions_pos->has($chrom_pos));
+		$results{'columns-all'}{'deletions'}->insert($line_minus_status) if ($deletions_pos->has($chrom_pos));
+
 		if ($status eq 'valid')
 		{
 			$results{'columns-valid'}{'all'}->insert($line_minus_status);
@@ -176,18 +212,27 @@ sub get_comparisons
 
 	my $true_negatives = $true_nonvariant_columns - $var_detected_col->{'all'}->size;
 
-	my $true_positives_sub = ($true_positives_set * $var_true_col->{'substitutions'})->size;
-	my $true_positives_ins = ($true_positives_set * $var_true_col->{'insertions'})->size;
-	my $true_positives_del = ($true_positives_set * $var_true_col->{'deletions'})->size;
+	my $true_col_positives_sub = intersect_columns_by_position($var_true_col->{'all'}, $var_true_col->{'substitutions'})->size;
+	my $true_col_positives_ins = intersect_columns_by_position($var_true_col->{'all'}, $var_true_col->{'insertions'})->size;
+	my $true_col_positives_del = intersect_columns_by_position($var_true_col->{'all'}, $var_true_col->{'deletions'})->size;
 
-	my $false_positives_sub = ($false_positives_set * $var_detected_col->{'substitutions'})->size;
-	my $false_positives_ins = ($false_positives_set * $var_detected_col->{'insertions'})->size;
-	my $false_positives_del = ($false_positives_set * $var_detected_col->{'deletions'})->size;
+	my $detected_col_positives_sub = intersect_columns_by_position($var_detected_col->{'all'}, $var_detected_col->{'substitutions'})->size;
+	my $detected_col_positives_ins = intersect_columns_by_position($var_detected_col->{'all'}, $var_detected_col->{'insertions'})->size;
+	my $detected_col_positives_del = intersect_columns_by_position($var_detected_col->{'all'}, $var_detected_col->{'deletions'})->size;
+	my $detected_col_positives_other = $detected_col_positives - ($detected_col_positives_sub + $detected_col_positives_ins + $detected_col_positives_del);
+
+	my $true_positives_sub = intersect_columns_by_position($true_positives_set, $var_true_col->{'substitutions'})->size;
+	my $true_positives_ins = intersect_columns_by_position($true_positives_set, $var_true_col->{'insertions'})->size;
+	my $true_positives_del = intersect_columns_by_position($true_positives_set, $var_true_col->{'deletions'})->size;
+
+	my $false_positives_sub = intersect_columns_by_position($false_positives_set, $var_detected_col->{'substitutions'})->size;
+	my $false_positives_ins = intersect_columns_by_position($false_positives_set, $var_detected_col->{'insertions'})->size;
+	my $false_positives_del = intersect_columns_by_position($false_positives_set, $var_detected_col->{'deletions'})->size;
 	my $false_positives_other = $false_positives - ($false_positives_sub+$false_positives_ins+$false_positives_del);
 
-	my $false_negatives_sub = ($false_negatives_set * $var_true_col->{'substitutions'})->size;
-	my $false_negatives_ins = ($false_negatives_set * $var_true_col->{'insertions'})->size;
-	my $false_negatives_del = ($false_negatives_set * $var_true_col->{'deletions'})->size;
+	my $false_negatives_sub = intersect_columns_by_position($false_negatives_set, $var_true_col->{'substitutions'})->size;
+	my $false_negatives_ins = intersect_columns_by_position($false_negatives_set, $var_true_col->{'insertions'})->size;
+	my $false_negatives_del = intersect_columns_by_position($false_negatives_set, $var_true_col->{'deletions'})->size;
 	
 	my $false_negatives = $false_negatives_set->size;
 	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
@@ -196,7 +241,7 @@ sub get_comparisons
 	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 	
-	return "$true_col_positives\t$true_nonvariant_columns\t$detected_col_positives\t$true_positives($true_positives_sub+$true_positives_ins+$true_positives_del)\t$false_positives($false_positives_sub+$false_positives_ins+$false_positives_del+$false_positives_other)\t$true_negatives\t$false_negatives($false_negatives_sub+$false_negatives_ins+$false_negatives_del)\t".
+	return "$true_col_positives(${true_col_positives_sub}S+${true_col_positives_ins}I+${true_col_positives_del}D)\t$true_nonvariant_columns\t$detected_col_positives(${detected_col_positives_sub}S+${detected_col_positives_ins}I+${detected_col_positives_del}D+${detected_col_positives_other}N)\t$true_positives(${true_positives_sub}S+${true_positives_ins}I+${true_positives_del}D)\t$false_positives(${false_positives_sub}S+${false_positives_ins}I+${false_positives_del}D+${false_positives_other}N)\t$true_negatives\t$false_negatives(${false_negatives_sub}S+${false_negatives_ins}I+${false_negatives_del}D)\t".
 		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
 }
 
