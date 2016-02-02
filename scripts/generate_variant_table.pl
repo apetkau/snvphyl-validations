@@ -116,18 +116,33 @@ sub get_unique_position
 
 	my ($sequence_name,$pos,$sequence,$length_sequence);
 
+	my $total_length = 0;
+	my @sequence_start_length = ();
+	for my $seq_name (@sequence_names)
+	{
+		my $sequence = $reference_table->{$seq_name};
+		push(@sequence_start_length,$total_length);
+		$total_length += $sequence->length;
+	}
+
 	# generate unique positions
 	do 
 	{
-		# select random sequence
-		my $seq_num = int(rand($number_sequences));
+		# select random position, scaled by length of each sequence in the file
+		my $position = int(rand($total_length));
 
-		$sequence_name = $sequence_names[$seq_num];
+		# find appropriate sequence in reference file
+		my $index = 0;
+		while(($index < @sequence_names) and ($position >= $sequence_start_length[$index]))
+		{
+			$index++;
+		}
+		my $chosen_index = $index - 1;
+
+		$sequence_name = $sequence_names[$chosen_index];
 		$sequence = $reference_table->{$sequence_name};
-		$length_sequence = $sequence->length;
 
-		# select random position
-		$pos = int(rand($length_sequence));
+		$pos = $position - $sequence_start_length[$chosen_index];
 	} while (exists $positions_used->{"${sequence_name}_${pos}"});
 	$positions_used->{"${sequence_name}_${pos}"} = 1;
 
@@ -184,7 +199,7 @@ if (defined $repeat_positions_file) {
 # read original reference sequences
 $reference_table = read_reference_sequences($ref_file);
 $reference_name = basename($ref_file, '.fasta');
-@sequence_names = (keys %$reference_table);
+@sequence_names = sort {$a cmp $b} (keys %$reference_table);
 $number_sequences = scalar(@sequence_names);
 
 print_header_line($num_duplicate_reference_genomes,$num_variant_genomes,$reference_name);
