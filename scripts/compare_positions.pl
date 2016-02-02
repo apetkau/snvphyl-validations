@@ -235,14 +235,12 @@ sub get_comparisons
 	my $false_negatives_del = intersect_columns_by_position($false_negatives_set, $var_true_col->{'deletions'})->size;
 	
 	my $false_negatives = $false_negatives_set->size;
-	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
-	my $specificity = sprintf "%0.4f",($true_negatives) / ($true_negatives + $false_positives);
-	my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_negatives);
-	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
-	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
+	my $specificity = sprintf "%0.6f",($true_negatives) / ($true_negatives + $false_positives);
+	my $sensitivity = sprintf "%0.6f",($true_positives) / ($true_positives + $false_negatives);
+	my $f1_score = sprintf "%0.6f",2*(($specificity*$sensitivity)/($specificity+$sensitivity));
 	
-	return "$true_col_positives(${true_col_positives_sub}S+${true_col_positives_ins}I+${true_col_positives_del}D)\t$true_nonvariant_columns\t$detected_col_positives(${detected_col_positives_sub}S+${detected_col_positives_ins}I+${detected_col_positives_del}D+${detected_col_positives_other}N)\t$true_positives(${true_positives_sub}S+${true_positives_ins}I+${true_positives_del}D)\t$false_positives(${false_positives_sub}S+${false_positives_ins}I+${false_positives_del}D+${false_positives_other}N)\t$true_negatives\t$false_negatives(${false_negatives_sub}S+${false_negatives_ins}I+${false_negatives_del}D)\t".
-		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
+	return "$true_col_positives\t$true_nonvariant_columns\t$detected_col_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
+		"\t$specificity\t$sensitivity\t$f1_score\n";
 }
 
 my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta]\n".
@@ -288,7 +286,7 @@ print "Reference_Genome_Size\t$reference_genome_size\n";
 print "Variants_True_File\t$variants_true_file\n";
 print "Variants_Detected_File\t$variants_detected_file\n";
 
-print "Case\tTrue_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFPR\n";
+print "Case\tTrue_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tSpecificity\tSensitivity\tF1_Score\n";
 print "all-vs-valid\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_all);
 print "valid-vs-valid\t",get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_valid);
 print "all-vs-all\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns_all);
