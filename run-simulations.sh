@@ -47,5 +47,5 @@ else
 	echo "Run 'tail -f $log_out $log_err' for more details"
 	$command > $log_out 2> $log_err
 
-	perl scripts/compare_positions.pl --variants-true $variant_table --variants-detected $output_dir/$run_name-pseudo-positions.tsv --reference-genome $reference > $variants_summary	
+	perl scripts/compare_positions.pl --variants-true $variant_table --variants-detected $output_dir/$run_name-pseudo-positions.tsv --reference-genome $reference | sort -k 1,1 -k 2,2n > $variants_summary
 fi
