@@ -41,11 +41,12 @@ else
 	log_out=$snvphyl_run_dir/$run_name-log.out
 	log_err=$snvphyl_run_dir/$run_name-log.err
 	variants_summary=$output_dir/variants_comparison_summary.tsv
+	false_variants=$output_dir/false_variants.tsv
 	command="run-snphyl.py --galaxy-url $galaxy_url --galaxy-api-key $galaxy_api_key --fastq-dir $fastq_dir --reference-file $reference --invalid-positions-file $invalid_positions_file --run-name $run_name --alternative-allele-ratio $alternative_allele_ratio --min-coverage $min_coverage --filter-density-window 0 --filter-density-threshold 100 --output-dir $output_dir"
 	date
 	echo $command
 	echo "Run 'tail -f $log_out $log_err' for more details"
 	$command > $log_out 2> $log_err
 
-	perl scripts/compare_positions.pl --variants-true $variant_table --variants-detected $output_dir/$run_name-pseudo-positions.tsv --reference-genome $reference | sort -k 1,1 -k 2,2n > $variants_summary
+	perl scripts/compare_positions.pl --variants-true $variant_table --variants-detected $output_dir/$run_name-pseudo-positions.tsv --reference-genome $reference --false-detection-output $false_variants > $variants_summary
 fi

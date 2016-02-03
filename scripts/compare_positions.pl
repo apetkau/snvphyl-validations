@@ -9,6 +9,8 @@ use Bio::SeqIO;
 use Set::Scalar;
 use Getopt::Long;
 
+my $false_detection_fh;
+
 sub is_substitution
 {
 	return ($_[0] =~ /substitution$/);
@@ -115,13 +117,13 @@ sub intersect_columns_by_position
 	my %columns_a_table = ();
 	for my $e ($columns_a->elements)
 	{
-		my ($chrom,$pos) = split(/\s/, $e);
+		my ($chrom,$pos) = split(/\t/, $e);
 		$columns_a_table{"$chrom\t$pos"} = $e;
 	}
 	my %columns_b_table = ();
 	for my $e ($columns_b->elements)
 	{
-		my ($chrom,$pos) = split(/\s/, $e);
+		my ($chrom,$pos) = split(/\t/, $e);
 		$columns_b_table{"$chrom\t$pos"} = $e;
 	}
 
@@ -144,9 +146,24 @@ sub parse_pos_line
 	my ($chrom,$position,$status,@bases) = @tokens;
 	die "Error with line $line\n" if (not defined $chrom or not defined $position or $position !~ /\d+/);
 	die "Error with line $line, status not properly defined\n" if (not defined $status or $status eq '');
-	my $line_minus_status = join(' ',$chrom,$position,@bases);
+	my $line_minus_status = join("\t",$chrom,$position,@bases);
 
 	return ($chrom,$position,$status,$line_minus_status);
+}
+
+sub find_differences_column_with_base_call
+{
+	my ($base_call, $column_set) = @_;
+
+	my $results = Set::Scalar->new;
+
+	for my $e ($column_set->elements)
+	{
+		my ($chrom,$pos,$status,@bases) = split(/\t/,$e);
+		$results->insert($e) if ((grep {/^$base_call$/} @bases) >= 1);
+	}
+
+	return $results;
 }
 
 sub read_pos_actual_variants_table
@@ -198,7 +215,7 @@ sub read_pos_actual_variants_table
 
 sub get_comparisons
 {
-	my ($var_true_col,$var_detected_col,$true_nonvariant_columns) = @_;
+	my ($var_true_col,$var_detected_col,$true_nonvariant_columns, $case) = @_;
 
 	# set operations
 	my $true_positives_set = $var_true_col->{'all'} * $var_detected_col->{'all'};
@@ -225,38 +242,48 @@ sub get_comparisons
 	my $true_positives_ins = intersect_columns_by_position($true_positives_set, $var_true_col->{'insertions'})->size;
 	my $true_positives_del = intersect_columns_by_position($true_positives_set, $var_true_col->{'deletions'})->size;
 
-	my $false_positives_sub = intersect_columns_by_position($false_positives_set, $var_detected_col->{'substitutions'})->size;
+	my $false_positives_sub_set = intersect_columns_by_position($false_positives_set, $var_detected_col->{'substitutions'});
+	my $false_positives_sub = $false_positives_sub_set->size;
 	my $false_positives_ins = intersect_columns_by_position($false_positives_set, $var_detected_col->{'insertions'})->size;
 	my $false_positives_del = intersect_columns_by_position($false_positives_set, $var_detected_col->{'deletions'})->size;
 	my $false_positives_other = $false_positives - ($false_positives_sub+$false_positives_ins+$false_positives_del);
 
-	my $false_negatives_sub = intersect_columns_by_position($false_negatives_set, $var_true_col->{'substitutions'})->size;
+	my $false_negatives_sub_set = intersect_columns_by_position($false_negatives_set, $var_true_col->{'substitutions'});
+	my $false_negatives_sub = $false_negatives_sub_set->size;
 	my $false_negatives_ins = intersect_columns_by_position($false_negatives_set, $var_true_col->{'insertions'})->size;
 	my $false_negatives_del = intersect_columns_by_position($false_negatives_set, $var_true_col->{'deletions'})->size;
-	
 	my $false_negatives = $false_negatives_set->size;
+
+	my $false_positives_filtered_base_set = find_differences_column_with_base_call('N',$false_positives_sub_set) + find_differences_column_with_base_call('-',$false_positives_sub_set);
+	print $false_detection_fh "$case\tFP\t",join("\n$case\tFP\t",($false_positives_sub_set - $false_positives_filtered_base_set)->elements),"\n";
+
+	my $false_negatives_filtered_base_set = find_differences_column_with_base_call('N',$false_negatives_sub_set) + find_differences_column_with_base_call('-',$false_negatives_sub_set);
+	print $false_detection_fh "$case\tFN\t",join("\n$case\tFN\t",($false_negatives_sub_set - $false_negatives_filtered_base_set)->elements),"\n";
+	
 	my $accuracy = sprintf "%0.4f",($true_positives + $true_negatives) / ($true_positives + $false_positives + $true_negatives + $false_negatives);
 	my $specificity = sprintf "%0.4f",($true_negatives) / ($true_negatives + $false_positives);
 	my $sensitivity = sprintf "%0.4f",($true_positives) / ($true_positives + $false_negatives);
 	my $precision = sprintf "%0.4f",($true_positives) / ($true_positives + $false_positives);
 	my $fp_rate = sprintf "%0.4f",($false_positives) / ($true_negatives + $false_positives);
 	
-	return "$true_col_positives(${true_col_positives_sub}S+${true_col_positives_ins}I+${true_col_positives_del}D)\t$true_nonvariant_columns\t$detected_col_positives(${detected_col_positives_sub}S+${detected_col_positives_ins}I+${detected_col_positives_del}D+${detected_col_positives_other}N)\t$true_positives(${true_positives_sub}S+${true_positives_ins}I+${true_positives_del}D)\t$false_positives(${false_positives_sub}S+${false_positives_ins}I+${false_positives_del}D+${false_positives_other}N)\t$true_negatives\t$false_negatives(${false_negatives_sub}S+${false_negatives_ins}I+${false_negatives_del}D)\t".
+	return "$true_col_positives\t$true_nonvariant_columns\t$detected_col_positives\t$true_positives\t$false_positives\t$true_negatives\t$false_negatives\t".
 		"$accuracy\t$specificity\t$sensitivity\t$precision\t$fp_rate\n";
 }
 
-my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta]\n".
+my $usage = "$0 --variants-true [variants-true.tsv] --variants-detected [variants-detected.tsv] --reference-genome [reference-genome.fasta] --false-detection-output [false detection output]\n".
 "Parameters:\n".
 "\t--variants-true: The true variants table.\n".
 "\t--variants-detected: The detected variants table\n".
 "\t--reference-genome: The reference genome in fasta format.  This is used to get the length to calculate the false negative rate.\n".
+"\t--false-detection-output: Output file for storing columns with bases that were miscalled\n".
 "Example:\n".
 "$0 --variants-true variants.tsv --variants-detected variants-detected.tsv --reference-genome reference.fasta\n\n";
 
-my ($variants_true_file,$variants_detected_file, $reference_genome_file);
+my ($variants_true_file,$variants_detected_file, $reference_genome_file, $false_detection_output);
 
 if (!GetOptions('variants-true=s' => \$variants_true_file,
 		'variants-detected=s' => \$variants_detected_file,
+		'false-detection-output=s' => \$false_detection_output,
 		'reference-genome=s' => \$reference_genome_file))
 {
 	die "Invalid option\n".$usage;
@@ -265,6 +292,7 @@ if (!GetOptions('variants-true=s' => \$variants_true_file,
 die "--variants-true not defined\n$usage" if (not defined $variants_true_file);
 die "--variants-detected not defined\n$usage" if (not defined $variants_detected_file);
 die "--reference-genome not defined\n$usage" if (not defined $reference_genome_file);
+die "--false-detection-output not defined\n$usage" if (not defined $false_detection_output);
 
 my $reference_genome_obj = Bio::SeqIO->new(-file=>"<$reference_genome_file", -format=>"fasta");
 my $reference_genome_size = 0;
@@ -283,12 +311,16 @@ die "Error: headers did not match\n" if ($variants_true->{'header'} ne $variants
 my $true_nonvariant_columns_all = $reference_genome_size - $variants_true->{'columns-all'}{'all'}->size;
 my $true_nonvariant_columns_valid = $reference_genome_size - $variants_true->{'columns-valid'}{'all'}->size;
 
+open($false_detection_fh, ">$false_detection_output") or die "Could not open $false_detection_output for writing";
+
 print "Reference_Genome_File\t$reference_genome_file\n";
 print "Reference_Genome_Size\t$reference_genome_size\n";
 print "Variants_True_File\t$variants_true_file\n";
 print "Variants_Detected_File\t$variants_detected_file\n";
 
 print "Case\tTrue_Variant_Columns\tTrue_Nonvariant_Columns\tColumns_Detected\tTP\tFP\tTN\tFN\tAccuracy\tSpecificity\tSensitivity\tPrecision\tFPR\n";
-print "all-vs-valid\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_all);
-print "valid-vs-valid\t",get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_valid);
-print "all-vs-all\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns_all);
+print "all-vs-valid\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_all, 'all-vs-valid');
+print "valid-vs-valid\t",get_comparisons($variants_true->{'columns-valid'}, $variants_detected->{'columns-valid'}, $true_nonvariant_columns_valid, 'valid-vs-valid');
+print "all-vs-all\t",get_comparisons($variants_true->{'columns-all'}, $variants_detected->{'columns-all'}, $true_nonvariant_columns_all, 'all-vs-all');
+
+close($false_detection_fh);
