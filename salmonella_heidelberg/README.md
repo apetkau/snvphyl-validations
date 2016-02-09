@@ -75,7 +75,28 @@ seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.21 > fastqs-sample-cov
 (for i in fastqs-sample-coverage/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs-sample-coverage/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs-sample-coverage/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee fastqs-sample-coverage/coverages.txt
 ```
 
-Manually upload fastq files to Galaxy and combine with other samples to construct datasets.
+Make directories for each cases fastq files and link up appropriate files.
+
+```
+mkdir fastqs-sample-coverage/{c30,c20,c15}
+pushd fastqs-sample-coverage/c30; ln -s ../../fastqs-downsampled/*.fastq .; popd
+pushd fastqs-sample-coverage/c20; ln -s ../../fastqs-downsampled/*.fastq .; popd
+pushd fastqs-sample-coverage/c15; ln -s ../../fastqs-downsampled/*.fastq .; popd
+rm fastqs-sample-coverage/c*/SH13-001*.fastq
+
+pushd fastqs-sample-coverage/c30; ln -s ../SH13-001_c30*.fastq .; popd
+pushd fastqs-sample-coverage/c20; ln -s ../SH13-001_c20*.fastq .; popd
+pushd fastqs-sample-coverage/c15; ln -s ../SH13-001_c15*.fastq .; popd
+prename 's/_c\d\d//' fastqs-sample-coverage/c*/SH13-001*.fastq
+```
+
+Run SNVPhyl on each case using default parameters.
+
+```
+dir=scov
+mkdir experiments/$dir
+for scov in c30 c20 c15; do name=scov-${scov}; echo $name; echo run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+```
 
 ## Contamination
 
