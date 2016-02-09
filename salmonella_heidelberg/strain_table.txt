@@ -1,4 +1,4 @@
-Strain	Source	Isolation date	Outbreak number	PFGE pattern	PT	Canadian PFGE pattern
+"Strain"	"Source"	"Isolation date"	"Outbreak number"	"PFGE pattern"	"PT"	"Canadian PFGE pattern"
 SH12-001	Human	05-2012	1	2	19	SHXAI.0001/SHBNI.0001
 SH12-002	Human	05-2012	1	2	19	SHXAI.0001/SHBNI.0001
 SH12-003	Human	05-2012	1	2	19	SHXAI.0001/SHBNI.0001

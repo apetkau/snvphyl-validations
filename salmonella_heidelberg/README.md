@@ -46,16 +46,36 @@ Minimum coverage is `61`, so downsample accordingly.
 Run with minimum coverage of 5, 10, 20 (case 15 was run initially).
 
 ```
-for cov in 5 10 20; do name=cov-${cov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --min-coverage $cov --run-name $name --output-dir experiments/$name; done 2>&1 | tee min-coverage.log
+dir=cov
+mkdir experiments/$dir
+for cov in 5 10 20; do name=cov-${cov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
 ```
 
 ## Alternative Allele Ratio
 
 ```
-for alt in 0.25 0.5 0.9; do name=alt-${alt}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$name; done 2>&1 | tee alt-allele-ratio.log
+dir=alt
+mkdir experiments/$dir
+for alt in 0.25 0.5 0.9; do name=alt-${alt}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 ```
 
 ## Sample Coverage
+
+Sample `SH13-001` is at a coverage of ~71 after the initial downsampling.  Downsample further so that it is at coverages **15,20,30**.
+
+```
+mkdir fastqs-sample-coverage
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.42 > fastqs-sample-coverage/SH13-001_c30_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.42 > fastqs-sample-coverage/SH13-001_c30_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.28 > fastqs-sample-coverage/SH13-001_c20_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.28 > fastqs-sample-coverage/SH13-001_c20_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.21 > fastqs-sample-coverage/SH13-001_c15_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.21 > fastqs-sample-coverage/SH13-001_c15_2.fastq
+
+(for i in fastqs-sample-coverage/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs-sample-coverage/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs-sample-coverage/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee fastqs-sample-coverage/coverages.txt
+```
+
+Manually upload fastq files to Galaxy and combine with other samples to construct datasets.
 
 ## Contamination
 

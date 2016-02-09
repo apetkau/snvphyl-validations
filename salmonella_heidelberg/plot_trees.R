@@ -12,44 +12,26 @@ get_outbreaks_for<-function(tree,table,col_id_name) {
 
 plot_tree<-function(tree,label,table,outbreaks,snv_matrix) {
 	edgecolors<-rep("black",nrow(tree$edge))
-	colors<-c("blue","blue","blue","black")
-	
-	edgecolors[which.edge(tree,outbreaks[[1]])]<-"blue"
-	edgecolors[which.edge(tree,outbreaks[[2]])]<-"blue"
-	edgecolors[which.edge(tree,outbreaks[[3]])]<-"blue"
 
-	tipcolors<-colors[get_outbreaks_for(tree,table,"Strain")]
+	#colors<-c("blue","blue","blue","black")
+	#tipcolors<-colors[get_outbreaks_for(tree,table,"Strain")]
 
-	if (all_valid_clusters(tree,outbreaks,snv_matrix,max_snv_distance)) {
-		boxcolor<-"green"
-	} else {
-		boxcolor<-"red"
-		invalid<-character()
-
-		# Find specific strains causing issues
-		# Search for any strains with too large distance
-		for(i in 1:length(outbreaks)) {
-			for(j in outbreaks[[i]]) {
-				o<-outbreaks[[i]]
-				snv_matrix_reduced<-snv_matrix[o,o]
-				if(Reduce("&", snv_matrix_reduced > max_snv_distance | snv_matrix_reduced == 0)) {
-					invalid<-c(invalid,j)
-				}
-			}
+	boxcolor<-"green"
+	for(i in 1:length(outbreaks)) {
+		if (!is_valid_cluster(tree,outbreaks[[i]],snv_matrix,max_snv_distance)) {
+			edgecolors[which.edge(tree,outbreaks[[i]])]<-"red"
+			boxcolor<-"red"
+		} else {
+			edgecolors[which.edge(tree,outbreaks[[i]])]<-"blue"
 		}
-		print(paste("invalid ",invalid))
-
-		edgecolors[which.edge(tree,invalid)]<-"red"
-		tipcolors[match(tree$tip.label,invalid)]<-"red"
 	}
 
-
 	#plot(tree,cex=0.5,edge.color=edgecolors,edge.width=3,tip.color=tipcolors,main=label,type="unrooted",show.tip.label=FALSE)
-	plot(tree,cex=0.5,edge.color=edgecolors,edge.width=3,tip.color=tipcolors,main=label,type="cladogram",show.tip.label=TRUE)
+	plot(tree,cex=0.5,edge.color=edgecolors,edge.width=3,main=label,type="radial",show.tip.label=FALSE)
 
-	nodelabels("1",getMRCA(tcov15,outbreak1),frame="circle",bg="blue")
-	nodelabels("2",getMRCA(tcov15,outbreak2),frame="circle",bg="blue")
-	nodelabels("3",getMRCA(tcov15,outbreak3),frame="circle",bg="blue")
+	nodelabels("O1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white")
+	nodelabels("O2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white")
+	nodelabels("O3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white")
 
 	box(which="plot", lty="solid", lwd="2", col=boxcolor)
 }
@@ -63,6 +45,7 @@ plot_all_trees<-function(trees,labels,table,snv_matrices) {
 	numtrees<-length(trees)
 	size<-numtrees + (numtrees %% 2) # make size even
 	plot.new()
+	frame()
 	layout(matrix(1:size,2,size/2))
 
 	for (i in 1:length(trees)) {
@@ -105,8 +88,8 @@ outbreak1<-as.vector(subset(strain_table,Outbreak.number=="1")$Strain)
 outbreak2<-as.vector(subset(strain_table,Outbreak.number=="2")$Strain)
 outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
-#experiments<-dir(c("experiments/alt","experiments/cov"), full.names=TRUE)
-experiments<-dir("experiments/alt", full.names=TRUE)
+experiments<-dir(c("experiments/alt","experiments/cov"), full.names=TRUE)
+#experiments<-dir("experiments/alt", full.names=TRUE)
 trees<-list()
 mdists<-list()
 cases<-list()
