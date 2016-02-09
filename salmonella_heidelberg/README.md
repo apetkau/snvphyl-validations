@@ -51,7 +51,10 @@ mkdir experiments/$dir
 for cov in 5 10 20; do name=cov-${cov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
 
 # link previous run to proper directory
-pushd experiments/cov; ln -s ../initial-snvphyl-run/ cov-15; popd
+cp -r experiments/initial-snvphyl-run/ experiments/cov/cov-15
+
+# Construct files storing titles
+for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${cov}/title; done
 ```
 
 ## Alternative Allele Ratio
@@ -60,6 +63,11 @@ pushd experiments/cov; ln -s ../initial-snvphyl-run/ cov-15; popd
 dir=alt
 mkdir experiments/$dir
 for alt in 0.25 0.5 0.9; do name=alt-${alt}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
+
+# link previous run to proper directory
+cp -r experiments/initial-snvphyl-run/ experiments/alt/alt-0.75
+
+for alt in 0.25 0.5 0.75 0.9; do echo "Alt. Allele Ratio $alt" > experiments/alt/alt-${alt}/title; done
 ```
 
 ## Sample Coverage
@@ -158,6 +166,9 @@ Run SNVPhyl on each case.
 dir=contamination
 mkdir experiments/$dir
 for case in 50p 20p 10p 5p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+
+# Titles
+for p in 50 20 10 5; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
 ```
 
 # Compile Results
