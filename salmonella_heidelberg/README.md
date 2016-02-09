@@ -49,6 +49,9 @@ Run with minimum coverage of 5, 10, 20 (case 15 was run initially).
 dir=cov
 mkdir experiments/$dir
 for cov in 5 10 20; do name=cov-${cov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
+
+# link previous run to proper directory
+pushd experiments/cov; ln -s ../initial-snvphyl-run/ cov-15; popd
 ```
 
 ## Alternative Allele Ratio
@@ -154,9 +157,8 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 50p 20p 10p 5p; do name=contamination-${case}; echo $name; echo run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 50p 20p 10p 5p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 ```
 
 # Compile Results
-
 
