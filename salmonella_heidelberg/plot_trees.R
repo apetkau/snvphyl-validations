@@ -2,6 +2,11 @@ library(ape)
 
 max_snv_distance=5
 
+normal_color<-"black"
+outbreak_color<-"blue"
+failure_color<-"red"
+
+
 get_outbreaks_for<-function(tree,table,col_id_name) {
 	colname<-"Outbreak.number"
 	values<-as.vector(table[match(tree$tip.label,table[[col_id_name]]),colname])
@@ -13,10 +18,8 @@ get_outbreaks_for<-function(tree,table,col_id_name) {
 plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	edgecolors<-rep("black",nrow(tree$edge))
 
-	#colors<-c("blue","blue","blue","black")
-	#tipcolors<-colors[get_outbreaks_for(tree,table,"Strain")]
-
-	boxcolor<-"black"
+	boxcolor<-normal_color
+	boxtype<-"solid"
 	failure_label<-""
 	failure_snv_distance<-0
 	failed_monophyletic<-FALSE
@@ -26,38 +29,52 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 		if (!is_valid_cluster(tree,outbreaks[[i]],snv_matrix,max_snv_distance)) {
 			snv_distance<-max(snv_matrix[outbreaks[[i]],outbreaks[[i]]])
 			if (!is.monophyletic(tree,outbreaks[[i]],reroot=FALSE)) {
-				edgecolors[which.edge(tree,outbreaks[[i]])]<-"red"
-				boxcolor<-"red"
+				edgecolors[which.edge(tree,outbreaks[[i]])]<-failure_color
+				boxcolor<-failure_color
+				boxtype<-"dashed"
 				failed_monophyletic<-TRUE
 			}
 
 			if (snv_distance > max_snv_distance) {
-				edgecolors[which.edge(tree,outbreaks[[i]])]<-"red"
-				boxcolor<-"red"
+				edgecolors[which.edge(tree,outbreaks[[i]])]<-failure_color
+				boxcolor<-failure_color
+				boxtype<-"dashed"
 				failed_snv_distance<-TRUE
 				failure_snv_distance<-max(failure_snv_distance,snv_distance)
 			}
 		} else {
-			edgecolors[which.edge(tree,outbreaks[[i]])]<-"blue"
+			edgecolors[which.edge(tree,outbreaks[[i]])]<-outbreak_color
 		}
 	}
 
-	if (failed_monophyletic) {
-		failure_label<-"Failed monophyletic\n"
-	}
-	if (failed_snv_distance) {
-		failure_label<-paste(failure_label,"Failed Distance ",failure_snv_distance," > ",max_snv_distance)
+	if (failed_monophyletic || failed_snv_distance) {
+		failure_label<-"Failed: "
+		if (failed_monophyletic) {
+			failure_label<-paste(failure_label,"M",sep='')
+		}
+		if (failed_snv_distance) {
+			failure_label<-paste(failure_label," D",failure_snv_distance,">",max_snv_distance, sep='')
+		}
 	}
 
-	#plot(tree,cex=0.5,edge.color=edgecolors,edge.width=3,tip.color=tipcolors,main=label,type="unrooted",show.tip.label=FALSE)
+	coresize_rounded=round(as.numeric(coresize['all','Percentage.in.core']))
+
 	plot(tree,cex=0.5,edge.color=edgecolors,edge.width=2,type="phylogram",show.tip.label=FALSE)
-	title(main=label,sub=paste(coresize['all','Percentage.in.core'],"% core\nSNVs Used ",snvs_used,"\n",failure_label,sep=''))
+	title(main=label,adj=0.5)
+	title(sub=paste(snvs_used, " SNVs",sep=''),adj=0,line=0.25)
+	title(sub=paste(coresize_rounded,"% core",sep=''),adj=1,line=0.25)
+	title(sub=failure_label,adj=0,line=1.25)
 
 	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white")
 	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white")
 	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white")
 
-	box(which="plot", lty="solid", lwd="2", col=boxcolor)
+	box(which="plot", lty=boxtype, lwd="2", col=boxcolor)
+}
+
+reset <- function() {
+	par(mfrow=c(1, 1), oma=c(0,0,0,0), mar=c(0,0,0,0), new=TRUE)
+	plot(0:1, 0:1, type="n", xlab="", ylab="", axes=FALSE)
 }
 
 plot_all_trees<-function(trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
@@ -72,10 +89,16 @@ plot_all_trees<-function(trees,labels,table,snv_matrices,coresizes,snvs_used_lis
 	frame()
 	pdf("figure3_trees.pdf",width=11,height=8.5)
 	layout(t(matrix(1:size,4,size/4)))
+	par(mar=c(2,0.5,2,0.5))
+	par(oma=c(5,0,3,0))
 
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
+	mtext("Phylogenetic trees",line=1,outer=TRUE)
+
+	reset()
+	legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
 
 	dev.off()
 }
@@ -112,9 +135,10 @@ outbreak2<-as.vector(subset(strain_table,Outbreak.number=="2")$Strain)
 outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
 experiments_cov<-sort(dir(c("experiments/cov"), full.names=TRUE))
+experiments_scov<-sort(dir(c("experiments/scov"), full.names=TRUE))
 experiments_alt<-sort(dir(c("experiments/alt"), full.names=TRUE))
 experiments_contamination<-sort(dir(c("experiments/contamination"), full.names=TRUE))
-experiments=c(experiments_cov,experiments_alt,experiments_contamination)
+experiments=c(experiments_cov,experiments_scov,experiments_alt,experiments_contamination)
 #experiments<-dir("experiments/scov2", full.names=TRUE)
 trees<-list()
 mdists<-list()
