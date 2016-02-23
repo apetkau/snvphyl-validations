@@ -107,54 +107,56 @@ Run SNVPhyl on each case using default parameters.
 dir=scov
 mkdir experiments/$dir
 for scov in c30 c20 c15; do name=scov-${scov}; echo $name; echo run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+
+for scov in 30 20 15; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
 
 ## Contamination
 
-Pick two samples `SH12-001` from outbreak 1 at a coverage of ~64 and `SH13-001` from outbreak 2 at a coverage of ~71. Downsample each and concatenate files such that the resulting sample is formed from a mixtured of reads at the appropriate ratios, with `SH13-001` being the higher ratio.
+Pick two samples `SH12-001` from outbreak 1 at a coverage of 63.6 and `SH13-001` from outbreak 2 at a coverage of 70.9. Pick `SH13-001` as being the read set with the higher amount of data and downsample each fastq file such that the resulting dataset is at the appropriate ratios (e.g. 95% and 5%) of the original coverage of `SH13-001` (70.9).  Concatenate each read set to form resulting contaminated sample.
 
 ```
 mkdir fastqs-contamination
 
-# 5% mixture (28.5x for SH13-001, 1.5x for SH12-001)
-seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.402 > fastqs-contamination/SH13-001_5p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.402 > fastqs-contamination/SH13-001_5p_2.fastq
+# 5% mixture (67.4x for SH13-001, 3.5x for SH12-001)
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.95 > fastqs-contamination/SH13-001_5p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.95 > fastqs-contamination/SH13-001_5p_2.fastq
 
-seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0236 > fastqs-contamination/SH12-001_5p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0236 > fastqs-contamination/SH12-001_5p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0550 > fastqs-contamination/SH12-001_5p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0550 > fastqs-contamination/SH12-001_5p_2.fastq
 
-# 10% mixture (27x for SH13-001, 3x for SH12-001)
-seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.381 > fastqs-contamination/SH13-001_10p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.381 > fastqs-contamination/SH13-001_10p_2.fastq
+# 10% mixture (63.8x for SH13-001, 7.1x for SH12-001)
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.90 > fastqs-contamination/SH13-001_10p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.90 > fastqs-contamination/SH13-001_10p_2.fastq
 
-seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0472 > fastqs-contamination/SH12-001_10p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0472 > fastqs-contamination/SH12-001_10p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.111 > fastqs-contamination/SH12-001_10p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.111 > fastqs-contamination/SH12-001_10p_2.fastq
 
-# 20% mixture (24x for SH13-001, 6x for SH12-001)
-seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.339 > fastqs-contamination/SH13-001_20p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.339 > fastqs-contamination/SH13-001_20p_2.fastq
+# 20% mixture (56.7x for SH13-001, 14.2x for SH12-001)
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.80 > fastqs-contamination/SH13-001_20p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.80 > fastqs-contamination/SH13-001_20p_2.fastq
 
-seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0944 > fastqs-contamination/SH12-001_20p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0944 > fastqs-contamination/SH12-001_20p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.223 > fastqs-contamination/SH12-001_20p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.223 > fastqs-contamination/SH12-001_20p_2.fastq
 
-# 50% mixture (15x for SH13-001, 15x for SH12-001)
-seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.212 > fastqs-contamination/SH13-001_50p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.212 > fastqs-contamination/SH13-001_50p_2.fastq
+# 30% mixture (49.6x for SH13-001, 21.3x for SH12-001)
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.70 > fastqs-contamination/SH13-001_30p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.70 > fastqs-contamination/SH13-001_30p_2.fastq
 
-seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.236 > fastqs-contamination/SH12-001_50p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.236 > fastqs-contamination/SH12-001_50p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.334 > fastqs-contamination/SH12-001_30p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.334 > fastqs-contamination/SH12-001_30p_2.fastq
 ```
 
 Create directories with other isolates and concatenate the contaminated isolates together.
 
 ```
-mkdir fastqs-contamination/{50,20,10,5}p
-for p in 50p 20p 10p 5p; do pushd fastqs-contamination/$p; ln -s ../../fastqs-downsampled/*.fastq .; popd; done
+mkdir fastqs-contamination/{30,20,10,5}p
+for p in 30p 20p 10p 5p; do pushd fastqs-contamination/$p; ln -s ../../fastqs-downsampled/*.fastq .; popd; done
 rm fastqs-contamination/*p/SH13-001*.fastq
 
 # Concatenate files
-for p in 50p 20p 10p 5p; do cat fastqs-contamination/*${p}_1.fastq > fastqs-contamination/$p/SH13-001_1.fastq; done
-for p in 50p 20p 10p 5p; do cat fastqs-contamination/*${p}_2.fastq > fastqs-contamination/$p/SH13-001_2.fastq; done
+for p in 30p 20p 10p 5p; do cat fastqs-contamination/*${p}_1.fastq > fastqs-contamination/$p/SH13-001_1.fastq; done
+for p in 30p 20p 10p 5p; do cat fastqs-contamination/*${p}_2.fastq > fastqs-contamination/$p/SH13-001_2.fastq; done
 
 # Check coverage of concatenated files
 (for i in fastqs-contamination/*p/SH13-001*_1.fastq; do name=`basename $i _1.fastq`; dname=`dirname $i`; forward=`sed -n 2~4p $dname/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p $dname/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$dname\t$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 6,6n | tee fastqs-contamination/coverages.txt
@@ -165,10 +167,10 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 50p 20p 10p 5p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 30p 20p 10p 5p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 
 # Titles
-for p in 50 20 10 5; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
+for p in 30 20 10 5; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
 ```
 
 # Compile Results

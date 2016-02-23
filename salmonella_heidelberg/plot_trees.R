@@ -63,11 +63,11 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	title(main=label,adj=0.5)
 	title(sub=paste(snvs_used, " SNVs",sep=''),adj=0,line=0.25)
 	title(sub=paste(coresize_rounded,"% core",sep=''),adj=1,line=0.25)
-	title(sub=failure_label,adj=0,line=1.25)
+	title(sub=failure_label,adj=0,line=1.25,col.sub=failure_color)
 
-	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white")
-	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white")
-	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white")
+	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white",cex=1.2)
+	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white",cex=1.2)
+	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white",cex=1.2)
 
 	box(which="plot", lty=boxtype, lwd="2", col=boxcolor)
 }
@@ -89,16 +89,20 @@ plot_all_trees<-function(trees,labels,table,snv_matrices,coresizes,snvs_used_lis
 	frame()
 	pdf("figure3_trees.pdf",width=11,height=8.5)
 	layout(t(matrix(1:size,4,size/4)))
-	par(mar=c(2,0.5,2,0.5))
+	par(mar=c(2.5,0.5,2,0.5))
 	par(oma=c(5,0,3,0))
 
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
+		## FIXME: Duplicate sample tree in this case for now to line everything up
+		if (labels[[i]] == "Min. Sample Coverage 30") {
+			plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
+		}
 	}
 	mtext("Phylogenetic trees",line=1,outer=TRUE)
 
 	reset()
-	legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
+	legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
 
 	dev.off()
 }
