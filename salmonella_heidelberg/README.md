@@ -155,12 +155,12 @@ Create directories with other isolates and concatenate the contaminated isolates
 
 ```
 mkdir fastqs-contamination/{30,20,10,5}p
-for p in 30p 20p 10p 5p; do pushd fastqs-contamination/$p; ln -s ../../fastqs-downsampled/*.fastq .; popd; done
+for p in 30p 20p 10p 05p; do pushd fastqs-contamination/$p; ln -s ../../fastqs-downsampled/*.fastq .; popd; done
 rm fastqs-contamination/*p/SH13-001*.fastq
 
 # Concatenate files
-for p in 30p 20p 10p 5p; do cat fastqs-contamination/*${p}_1.fastq > fastqs-contamination/$p/SH13-001_1.fastq; done
-for p in 30p 20p 10p 5p; do cat fastqs-contamination/*${p}_2.fastq > fastqs-contamination/$p/SH13-001_2.fastq; done
+for p in 30p 20p 10p 05p; do cat fastqs-contamination/*${p}_1.fastq > fastqs-contamination/$p/SH13-001_1.fastq; done
+for p in 30p 20p 10p 05p; do cat fastqs-contamination/*${p}_2.fastq > fastqs-contamination/$p/SH13-001_2.fastq; done
 
 # Check coverage of concatenated files
 (for i in fastqs-contamination/*p/SH13-001*_1.fastq; do name=`basename $i _1.fastq`; dname=`dirname $i`; forward=`sed -n 2~4p $dname/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p $dname/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$dname\t$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 6,6n | tee fastqs-contamination/coverages.txt
@@ -171,11 +171,18 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 30p 20p 10p 5p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 
 # Titles
-for p in 30 20 10 5; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
+for p in 30 20 10 05; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
 ```
 
 # Compile Results
 
+Please run the script `plot_trees.R`.
+
+```
+R CMD BATCH plot_trees.R
+```
+
+This will generate a file `figure3_trees.pdf` which has the completed figure.

@@ -94,10 +94,6 @@ plot_all_trees<-function(trees,labels,table,snv_matrices,coresizes,snvs_used_lis
 
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
-		## FIXME: Duplicate sample tree in this case for now to line everything up
-		if (labels[[i]] == "Min. Sample Coverage 30") {
-			plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
-		}
 	}
 	mtext("Phylogenetic trees",line=1,outer=TRUE)
 
