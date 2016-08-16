@@ -22,12 +22,13 @@ sub get_order_snvphyl_table {
 }
 
 
-my $usage = "$0 --snvphyl-table [variants.tsv] --gubbins-table [name.summary_of_snp_distribution.vcf]\n";
+my $usage = "$0 --snvphyl-table [variants.tsv] --gubbins-table [name.summary_of_snp_distribution.vcf] [--mark-invalid-alignments]\n";
 
-my ($snvphyl_table,$gubbins_table);
+my ($snvphyl_table,$gubbins_table,$mark_invalid_alignments);
 
 if (!GetOptions('snvphyl-table=s' => \$snvphyl_table,
-		'gubbins-table=s' => \$gubbins_table)) {
+		'gubbins-table=s' => \$gubbins_table,
+		'mark-invalid-alignments' => \$mark_invalid_alignments)) {
 	die "Invalid option\n".$usage;
 }
 
@@ -58,12 +59,22 @@ while (my $line = readline($gfh)) {
 	my (@gubbins_fields) = split(/\t/,$line);
 	my ($chr,$pos,$id,$ref,$alt) = @gubbins_fields;
 
-	print "{chrom}\t$pos\tvalid\t$ref";
+	my $status = 'valid';
+	my $base_string = '';
 	for my $genome (@snvphyl_order) {
 		my $gubbins_base = $gubbins_fields[$genome_gubbins_field{$genome}];
-		print "\t$gubbins_base";
+		$base_string .= "\t$gubbins_base";
+		if (uc($gubbins_base) eq 'N' ) {
+			$status = 'filtered-mpileup';
+		} elsif (uc($gubbins_base) eq '-') {
+			$status = 'filtered-coverage';
+		} elsif ($base_string !~ /[ATCG]/) {
+			die "Error: invalid base, not one of (ATCG-N) on line \"$line\"";
+		}
 	}
-	print "\n";
+
+	$status = 'valid' if (!$mark_invalid_alignments);
+	print "{chrom}\t$pos\t$status\t$ref".$base_string."\n";
 }
 
 close($gfh);
