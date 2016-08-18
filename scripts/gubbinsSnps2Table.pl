@@ -59,7 +59,12 @@ while (my $line = readline($gfh)) {
 	my (@gubbins_fields) = split(/\t/,$line);
 	my ($chr,$pos,$id,$ref,$alt) = @gubbins_fields;
 
-	my $status = 'valid';
+	my $status;
+	if (uc($ref) eq 'N' or uc($ref) eq '-') {
+		$status = 'filtered-invalid';
+	} else {
+		$status = 'valid';
+	}
 	my $base_string = '';
 	for my $genome (@snvphyl_order) {
 		my $gubbins_base = $gubbins_fields[$genome_gubbins_field{$genome}];
