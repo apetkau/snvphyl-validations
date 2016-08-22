@@ -1,0 +1,29 @@
+Island start	Island end	Length	Method	Gene name	Gene ID	Locus	Gene start	Gene end	Strand	Product	External Annotations
+1363841	1373809	9968	Predicted by at least one method	YP_002511319.1		SPN23F_13980	1363841	1364833	-1	AraC family transcriptional regulator	Virulence gene(BLAST)
+1363841	1373809	9968	Predicted by at least one method	YP_002511320.1		SPN23F_13990	1364993	1366747	1	ABC transporter	Virulence gene(BLAST)
+1363841	1373809	9968	Predicted by at least one method	YP_002511321.1		SPN23F_14000	1366731	1368452	1	ABC transporter	
+1363841	1373809	9968	Predicted by at least one method	YP_002511322.1		SPN23F_14010	1368463	1369047	1	hypothetical protein	
+1363841	1373809	9968	Predicted by at least one method	YP_002511323.1		SPN23F_14020	1369047	1369742	1	hypothetical protein	
+1363841	1373809	9968	Predicted by at least one method	YP_002511324.1		SPN23F_14030	1369730	1371094	1	ABC transporter	
+1363841	1373809	9968	Predicted by at least one method	YP_002511325.1		SPN23F_14080	1373293	1373643	-1	transposase	
+1363841	1373809	9968	Predicted by at least one method	YP_002511326.1		SPN23F_14090	1373624	1373809	-1	IS66 family element, orf1	
+1521260	1526926	5666	Predicted by at least one method	YP_002511468.1	ssb1	SPN23F_15710	1521241	1521948	-1	phage single-strand DNA binding protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511469.1		SPN23F_15720	1521954	1522406	-1	hypothetical protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511470.1		SPN23F_15730	1522458	1522982	-1	hypothetical protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511471.1		SPN23F_15740	1523063	1523329	-1	hypothetical protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511472.1		SPN23F_15750	1523561	1523824	-1	hypothetical protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511473.1		SPN23F_15760	1524002	1524193	-1	phage DNA-binding protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511474.1		SPN23F_15770	1524490	1524852	1	DNA-binding protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511475.1		SPN23F_15780	1524874	1525254	1	hypothetical protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511476.1		SPN23F_15790	1525268	1525618	1	phage protein	
+1521260	1526926	5666	Predicted by at least one method	YP_002511477.1		SPN23F_15800	1525737	1526864	1	phage integrase	
+1715902	1737845	21943	Predicted by at least one method	YP_002511659.1		SPN23F_17780	1715902	1716867	-1	hypothetical protein	
+1715902	1737845	21943	Predicted by at least one method	YP_002511660.1		SPN23F_17790	1716896	1717486	-1	glycosyltransferase	
+1715902	1737845	21943	Predicted by at least one method	YP_002511661.1		SPN23F_17800	1717777	1718991	-1	glycosyltransferase	Virulence gene(BLAST)
+1715902	1737845	21943	Predicted by at least one method	YP_002511662.1		SPN23F_17810	1719298	1721382	-1	glycosyl transferase	Virulence gene(BLAST)
+1715902	1737845	21943	Predicted by at least one method	YP_002511663.1	psrP	SPN23F_17820	1721443	1734744	-1	cell wall surface anchored protein	Virulence gene(Victors)
+1715902	1737845	21943	Predicted by at least one method	YP_002511664.1		SPN23F_17840	1735116	1735595	-1	transposase	
+1715902	1737845	21943	Predicted by at least one method	YP_002511665.1		SPN23F_17850	1735974	1736354	1	MarR-family transcriptional regulator	
+1715902	1737845	21943	Predicted by at least one method	YP_002511666.1		SPN23F_17860	1736453	1736674	1	hypothetical protein	
+1715902	1737845	21943	Predicted by at least one method	YP_002511667.1		SPN23F_17870	1736691	1737005	1	thioredoxin	
+1715902	1737845	21943	Predicted by at least one method	YP_002511668.1		SPN23F_17880	1737312	1737845	1	7-cyano-7-deazaguanine reductase	
