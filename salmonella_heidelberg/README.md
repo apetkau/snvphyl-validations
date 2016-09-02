@@ -21,7 +21,7 @@ Directory `S_heildelberg_QC/` should contain a folder for each sample, with fast
 
 Minimum coverage is `61`, so downsample accordingly.
 
-3. Downsample all sequence reads using `seqtk` (1.0-r31) so minimum coverage is ~30.
+3. Downsample all sequence reads using `seqtk` (1.1-r92-dirty) so minimum coverage is ~30.
 
     ```
     for i in fastqs/*.fastq; do b=`basename $i`; echo $i; seqtk sample -s 121 $i 0.5 > fastqs-downsampled/$b; done
@@ -32,26 +32,16 @@ Minimum coverage is `61`, so downsample accordingly.
     ```
     (for i in fastqs-downsampled/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs-downsampled/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs-downsampled/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee coverages-downsampled.txt
     ```
-
-5. Run SNVPhyl with all default settings initially.  Will upload all fastq files to Galaxy.
-
-    ```
-    run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --run-name initial-snvphyl-run --output-dir experiments/initial-snvphyl-run
-    ```
-
 # Experiments
 
 ## Minimum Coverage
 
-Run with minimum coverage of 5, 10, 20 (case 15 was run initially).
+Run with minimum coverage of 5, 10, 15, 20.
 
 ```
 dir=cov
 mkdir experiments/$dir
-for cov in 5 10 20; do name=cov-${cov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
-
-# link previous run to proper directory
-cp -r experiments/initial-snvphyl-run/ experiments/cov/cov-15
+for cov in 5 10 15 20; do name=cov-${cov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
 
 # Construct files storing titles
 for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${cov}/title; done
@@ -62,10 +52,8 @@ for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${c
 ```
 dir=alt
 mkdir experiments/$dir
-for alt in 0.25 0.5 0.9; do name=alt-${alt}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
-
-# link previous run to proper directory
-cp -r experiments/initial-snvphyl-run/ experiments/alt/alt-0.75
+for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
+for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 
 for alt in 0.25 0.5 0.75 0.9; do echo "Alt. Allele Ratio $alt" > experiments/alt/alt-${alt}/title; done
 ```
@@ -110,7 +98,7 @@ Run SNVPhyl on each case using default parameters.
 ```
 dir=scov
 mkdir experiments/$dir
-for scov in c30 c25 c20 c15; do name=scov-${scov}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+for scov in c30 c25 c20 c15; do name=scov-${scov}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
 
 for scov in 30 25 20 15; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
@@ -171,7 +159,7 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; run-snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 
 # Titles
 for p in 30 20 10 05; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
