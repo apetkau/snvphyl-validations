@@ -36,7 +36,7 @@ Minimum coverage is `61`, so downsample accordingly.
 
 ## Minimum Coverage
 
-Run with minimum coverage of 5, 10, 15, 20.
+Run with minimum coverage of 5, 10, 15, 20.  Using <https://github.com/phac-nml/snvphyl-galaxy-cli> commit `dcebd40a3ddb5b335caa3e4de6ddc6cdd88f7a8b`.
 
 ```
 dir=cov
@@ -52,8 +52,7 @@ for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${c
 ```
 dir=alt
 mkdir experiments/$dir
-for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-history-name 'snvphyl-S_HeidelbergSL476-2016-02-07-initial-snvphyl-run' --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
-for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
+for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --min-coverage 10 --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 
 for alt in 0.25 0.5 0.75 0.9; do echo "Alt. Allele Ratio $alt" > experiments/alt/alt-${alt}/title; done
 ```
@@ -98,7 +97,7 @@ Run SNVPhyl on each case using default parameters.
 ```
 dir=scov
 mkdir experiments/$dir
-for scov in c30 c25 c20 c15; do name=scov-${scov}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+for scov in c30 c25 c20 c15; do name=scov-${scov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
 
 for scov in 30 25 20 15; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
