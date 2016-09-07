@@ -110,11 +110,11 @@ Pick two samples `SH12-001` from outbreak 1 at a coverage of 63.6 and `SH13-001`
 mkdir fastqs-contamination
 
 # 5% mixture (67.4x for SH13-001, 3.5x for SH12-001)
-seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.95 > fastqs-contamination/SH13-001_5p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.95 > fastqs-contamination/SH13-001_5p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.95 > fastqs-contamination/SH13-001_05p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.95 > fastqs-contamination/SH13-001_05p_2.fastq
 
-seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0550 > fastqs-contamination/SH12-001_5p_1.fastq
-seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0550 > fastqs-contamination/SH12-001_5p_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_1.fastq 0.0550 > fastqs-contamination/SH12-001_05p_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.0550 > fastqs-contamination/SH12-001_05p_2.fastq
 
 # 10% mixture (63.8x for SH13-001, 7.1x for SH12-001)
 seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.90 > fastqs-contamination/SH13-001_10p_1.fastq
@@ -141,7 +141,7 @@ seqtk sample -s 121 fastqs-downsampled/SH12-001_2.fastq 0.334 > fastqs-contamina
 Create directories with other isolates and concatenate the contaminated isolates together.
 
 ```
-mkdir fastqs-contamination/{30,20,10,5}p
+mkdir fastqs-contamination/{30,20,10,05}p
 for p in 30p 20p 10p 05p; do pushd fastqs-contamination/$p; ln -s ../../fastqs-downsampled/*.fastq .; popd; done
 rm fastqs-contamination/*p/SH13-001*.fastq
 
@@ -158,7 +158,7 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; snvphyl.py --galaxy-url [URL] --galaxy-api-key [KEY] --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 
 # Titles
 for p in 30 20 10 05; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
