@@ -59,7 +59,7 @@ for alt in 0.25 0.5 0.75 0.9; do echo "Alt. Allele Ratio $alt" > experiments/alt
 
 ## Sample Coverage
 
-Sample `SH13-001` is at a coverage of ~71 after the initial downsampling.  Downsample further so that it is at coverages **15,20,25,30**.
+Sample `SH13-001` is at a coverage of ~71 after the initial downsampling.  Downsample further so that it is at coverages **10,15,20,25,30**.
 
 ```
 mkdir fastqs-sample-coverage
@@ -71,6 +71,8 @@ seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.282 > fastqs-sample-co
 seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.282 > fastqs-sample-coverage/SH13-001_c20_2.fastq
 seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.212 > fastqs-sample-coverage/SH13-001_c15_1.fastq
 seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.212 > fastqs-sample-coverage/SH13-001_c15_2.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_1.fastq 0.141 > fastqs-sample-coverage/SH13-001_c10_1.fastq
+seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.141 > fastqs-sample-coverage/SH13-001_c10_2.fastq
 
 (for i in fastqs-sample-coverage/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs-sample-coverage/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs-sample-coverage/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee fastqs-sample-coverage/coverages.txt
 ```
@@ -78,17 +80,19 @@ seqtk sample -s 121 fastqs-downsampled/SH13-001_2.fastq 0.212 > fastqs-sample-co
 Make directories for each cases fastq files and link up appropriate files.
 
 ```
-mkdir fastqs-sample-coverage/{c30,c25,c20,c15}
+mkdir fastqs-sample-coverage/{c30,c25,c20,c15,c10}
 pushd fastqs-sample-coverage/c30; ln -s ../../fastqs-downsampled/*.fastq .; popd
 pushd fastqs-sample-coverage/c25; ln -s ../../fastqs-downsampled/*.fastq .; popd
 pushd fastqs-sample-coverage/c20; ln -s ../../fastqs-downsampled/*.fastq .; popd
 pushd fastqs-sample-coverage/c15; ln -s ../../fastqs-downsampled/*.fastq .; popd
+pushd fastqs-sample-coverage/c10; ln -s ../../fastqs-downsampled/*.fastq .; popd
 rm fastqs-sample-coverage/c*/SH13-001*.fastq
 
 pushd fastqs-sample-coverage/c30; ln -s ../SH13-001_c30*.fastq .; popd
 pushd fastqs-sample-coverage/c25; ln -s ../SH13-001_c25*.fastq .; popd
 pushd fastqs-sample-coverage/c20; ln -s ../SH13-001_c20*.fastq .; popd
 pushd fastqs-sample-coverage/c15; ln -s ../SH13-001_c15*.fastq .; popd
+pushd fastqs-sample-coverage/c10; ln -s ../SH13-001_c10*.fastq .; popd
 prename 's/_c\d\d//' fastqs-sample-coverage/c*/SH13-001*.fastq
 ```
 
@@ -97,9 +101,9 @@ Run SNVPhyl on each case using default parameters.
 ```
 dir=scov
 mkdir experiments/$dir
-for scov in c30 c25 c20 c15; do name=scov-${scov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+for scov in c30 c25 c20 c15 c10; do name=scov-${scov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
 
-for scov in 30 25 20 15; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
+for scov in 30 25 20 15 10; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
 
 ## Contamination

@@ -57,7 +57,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 		}
 	}
 
-	coresize_rounded=round(as.numeric(coresize['all','Percentage.in.core']))
+	coresize_rounded=round(as.numeric(coresize['all','Percentage.of.all.positions.that.are.valid..included..and.part.of.the.core.genome']))
 
 	plot(tree,cex=0.5,edge.color=edgecolors,edge.width=2,type="phylogram",show.tip.label=FALSE)
 	title(main=label,adj=0.5)
@@ -147,10 +147,10 @@ cases<-list()
 snvs_used_list<-list()
 
 for(i in 1:length(experiments)) {
-	tree_name<-list.files(experiments[i], pattern="pseudoalign.phy_phyml_tree.txt")
-	mdist_name<-list.files(experiments[i], pattern="snp_matrix.tsv")
-	vcf2core_name<-list.files(experiments[i], pattern="vcf2core.csv")
-	filter_name<-list.files(experiments[i], pattern="filter-stats.tsv")
+	tree_name<-list.files(experiments[i], pattern="phylogeneticTree.newick")
+	mdist_name<-list.files(experiments[i], pattern="snvMatrix.tsv")
+	vcf2core_name<-list.files(experiments[i], pattern="vcf2core.tsv")
+	filter_name<-list.files(experiments[i], pattern="filterStats.txt")
 	title_name<-list.files(experiments[i], pattern="title")
 
 	tree<-read.tree(paste(experiments[i],tree_name,sep="/"))
