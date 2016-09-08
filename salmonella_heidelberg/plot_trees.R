@@ -3,7 +3,7 @@ library(ape)
 max_snv_distance=5
 
 normal_color<-"black"
-outbreak_color<-"blue"
+outbreak_color<-"black"
 failure_color<-"red"
 
 
@@ -24,6 +24,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	failure_snv_distance<-0
 	failed_monophyletic<-FALSE
 	failed_snv_distance<-FALSE
+	outbreak_colors=c(normal_color,normal_color,normal_color)
 	for(i in 1:length(outbreaks)) {
 
 		if (!is_valid_cluster(tree,outbreaks[[i]],snv_matrix,max_snv_distance)) {
@@ -31,6 +32,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 			if (!is.monophyletic(tree,outbreaks[[i]],reroot=FALSE)) {
 				edgecolors[which.edge(tree,outbreaks[[i]])]<-failure_color
 				boxcolor<-failure_color
+				outbreak_colors[i]<-failure_color
 				boxtype<-"dashed"
 				failed_monophyletic<-TRUE
 			}
@@ -38,6 +40,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 			if (snv_distance > max_snv_distance) {
 				edgecolors[which.edge(tree,outbreaks[[i]])]<-failure_color
 				boxcolor<-failure_color
+				outbreak_colors[i]<-failure_color
 				boxtype<-"dashed"
 				failed_snv_distance<-TRUE
 				failure_snv_distance<-max(failure_snv_distance,snv_distance)
@@ -50,10 +53,10 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	if (failed_monophyletic || failed_snv_distance) {
 		failure_label<-"Failed: "
 		if (failed_monophyletic) {
-			failure_label<-paste(failure_label,"M",sep='')
+			failure_label<-paste(failure_label,"Not monophyletic",sep='')
 		}
 		if (failed_snv_distance) {
-			failure_label<-paste(failure_label," D",failure_snv_distance,">",max_snv_distance, sep='')
+			failure_label<-paste(failure_label,"Distance not within ",max_snv_distance, sep='')
 		}
 	}
 
@@ -65,9 +68,9 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	title(sub=paste(coresize_rounded,"% core",sep=''),adj=1,line=0.25)
 	title(sub=failure_label,adj=0,line=1.25,col.sub=failure_color)
 
-	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white",cex=1.2)
-	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white",cex=1.2)
-	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white",cex=1.2)
+	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[1])
+	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[2])
+	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[3])
 
 	box(which="plot", lty=boxtype, lwd="2", col=boxcolor)
 }
@@ -77,7 +80,7 @@ reset <- function() {
 	plot(0:1, 0:1, type="n", xlab="", ylab="", axes=FALSE)
 }
 
-plot_all_trees<-function(experiment,trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
+plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
 	outbreak1<-as.vector(subset(table,Outbreak.number=="1")$Strain)
 	outbreak2<-as.vector(subset(table,Outbreak.number=="2")$Strain)
 	outbreak3<-as.vector(subset(table,Outbreak.number=="3")$Strain)
@@ -87,7 +90,7 @@ plot_all_trees<-function(experiment,trees,labels,table,snv_matrices,coresizes,sn
 	size<-numtrees + (numtrees %% 2) # make multiple of 2
 	plot.new()
 	frame()
-	file_name<-paste("figure-S",experiment,"pdf",sep=".")
+	file_name<-paste("figure-S",figure_num,".pdf",sep='')
 	pdf(file_name,width=11,height=8.5)
 	layout(t(matrix(1:size,2,size/2)))
 	par(mar=c(2.5,0.5,2,0.5))
@@ -96,7 +99,7 @@ plot_all_trees<-function(experiment,trees,labels,table,snv_matrices,coresizes,sn
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
-	mtext("Phylogenetic trees",line=1,outer=TRUE)
+	mtext(paste("Figure S",figure_num,": ",figure_label,sep=''),line=1,outer=TRUE,)
 
 	reset()
 	legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
@@ -135,7 +138,11 @@ outbreak1<-as.vector(subset(strain_table,Outbreak.number=="1")$Strain)
 outbreak2<-as.vector(subset(strain_table,Outbreak.number=="2")$Strain)
 outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
-for (experiment in c("cov","scov","alt","contamination")) {
+experiment_names<-c("cov","scov","alt","contamination")
+experiment_labels<-c("Minimum Coverage","Minimum Sample Coverage","Alternative Allele Ratio","Contamination")
+
+for (i in 1:length(experiment_names)) {
+	experiment<-experiment_names[i]
 	experiment_dirs<-sort(dir(paste("experiments",experiment,sep="/"), full.names=TRUE))
 	
 	trees<-list()
@@ -144,19 +151,19 @@ for (experiment in c("cov","scov","alt","contamination")) {
 	cases<-list()
 	snvs_used_list<-list()
 	
-	for(i in 1:length(experiment_dirs)) {
-		tree_name<-list.files(experiment_dirs[i], pattern="phylogeneticTree.newick")
-		mdist_name<-list.files(experiment_dirs[i], pattern="snvMatrix.tsv")
-		vcf2core_name<-list.files(experiment_dirs[i], pattern="vcf2core.tsv")
-		filter_name<-list.files(experiment_dirs[i], pattern="filterStats.txt")
-		title_name<-list.files(experiment_dirs[i], pattern="title")
+	for(j in 1:length(experiment_dirs)) {
+		tree_name<-list.files(experiment_dirs[j], pattern="phylogeneticTree.newick")
+		mdist_name<-list.files(experiment_dirs[j], pattern="snvMatrix.tsv")
+		vcf2core_name<-list.files(experiment_dirs[j], pattern="vcf2core.tsv")
+		filter_name<-list.files(experiment_dirs[j], pattern="filterStats.txt")
+		title_name<-list.files(experiment_dirs[j], pattern="title")
 	
-		tree<-read.tree(paste(experiment_dirs[i],tree_name,sep="/"))
-		mdist<-read_snv_matrix(paste(experiment_dirs[i],mdist_name,sep="/"))
-		vcf2core<-read.delim(paste(experiment_dirs[i],vcf2core_name,sep="/"),row.names=1)
-		case<-paste(readLines(paste(experiment_dirs[i],title_name,sep="/")))
+		tree<-read.tree(paste(experiment_dirs[j],tree_name,sep="/"))
+		mdist<-read_snv_matrix(paste(experiment_dirs[j],mdist_name,sep="/"))
+		vcf2core<-read.delim(paste(experiment_dirs[j],vcf2core_name,sep="/"),row.names=1)
+		case<-paste(readLines(paste(experiment_dirs[j],title_name,sep="/")))
 	
-		filter_stats<-paste(readLines(paste(experiment_dirs[i],filter_name,sep="/")))
+		filter_stats<-paste(readLines(paste(experiment_dirs[j],filter_name,sep="/")))
 		snvs_used<-sub("Number of sites used to generate phylogeny: ([0-9]+)$","\\1",grep("^Number of sites used to generate phylogeny: ",value=TRUE,filter_stats))
 	
 		trees[[length(trees)+1]]<-tree
@@ -166,5 +173,5 @@ for (experiment in c("cov","scov","alt","contamination")) {
 		snvs_used_list[[length(snvs_used_list)+1]]<-snvs_used
 	}
 	
-	plot_all_trees(experiment,trees,cases,strain_table,mdists,coresizes,snvs_used_list)
+	plot_all_trees(experiment,i,experiment_labels[i],trees,cases,strain_table,mdists,coresizes,snvs_used_list)
 }
