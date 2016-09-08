@@ -77,18 +77,19 @@ reset <- function() {
 	plot(0:1, 0:1, type="n", xlab="", ylab="", axes=FALSE)
 }
 
-plot_all_trees<-function(trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
+plot_all_trees<-function(experiment,trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
 	outbreak1<-as.vector(subset(table,Outbreak.number=="1")$Strain)
 	outbreak2<-as.vector(subset(table,Outbreak.number=="2")$Strain)
 	outbreak3<-as.vector(subset(table,Outbreak.number=="3")$Strain)
 	outbreaks<-list(outbreak1,outbreak2,outbreak3)
 
 	numtrees<-length(trees)
-	size<-numtrees + (numtrees %% 4) # make multiple of 4
+	size<-numtrees + (numtrees %% 2) # make multiple of 2
 	plot.new()
 	frame()
-	pdf("figure3_trees.pdf",width=11,height=8.5)
-	layout(t(matrix(1:size,4,size/4)))
+	file_name<-paste("figure-S",experiment,"pdf",sep=".")
+	pdf(file_name,width=11,height=8.5)
+	layout(t(matrix(1:size,2,size/2)))
 	par(mar=c(2.5,0.5,2,0.5))
 	par(oma=c(5,0,3,0))
 
@@ -134,38 +135,36 @@ outbreak1<-as.vector(subset(strain_table,Outbreak.number=="1")$Strain)
 outbreak2<-as.vector(subset(strain_table,Outbreak.number=="2")$Strain)
 outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
-experiments_cov<-sort(dir(c("experiments/cov"), full.names=TRUE))
-experiments_scov<-sort(dir(c("experiments/scov"), full.names=TRUE))
-experiments_alt<-sort(dir(c("experiments/alt"), full.names=TRUE))
-experiments_contamination<-sort(dir(c("experiments/contamination"), full.names=TRUE))
-experiments=c(experiments_cov,experiments_scov,experiments_alt,experiments_contamination)
-#experiments<-dir("experiments/scov2", full.names=TRUE)
-trees<-list()
-mdists<-list()
-coresizes<-list()
-cases<-list()
-snvs_used_list<-list()
-
-for(i in 1:length(experiments)) {
-	tree_name<-list.files(experiments[i], pattern="phylogeneticTree.newick")
-	mdist_name<-list.files(experiments[i], pattern="snvMatrix.tsv")
-	vcf2core_name<-list.files(experiments[i], pattern="vcf2core.tsv")
-	filter_name<-list.files(experiments[i], pattern="filterStats.txt")
-	title_name<-list.files(experiments[i], pattern="title")
-
-	tree<-read.tree(paste(experiments[i],tree_name,sep="/"))
-	mdist<-read_snv_matrix(paste(experiments[i],mdist_name,sep="/"))
-	vcf2core<-read.delim(paste(experiments[i],vcf2core_name,sep="/"),row.names=1)
-	case<-paste(readLines(paste(experiments[i],title_name,sep="/")))
-
-	filter_stats<-paste(readLines(paste(experiments[i],filter_name,sep="/")))
-	snvs_used<-sub("Number of sites used to generate phylogeny: ([0-9]+)$","\\1",grep("^Number of sites used to generate phylogeny: ",value=TRUE,filter_stats))
-
-	trees[[length(trees)+1]]<-tree
-	mdists[[length(mdists)+1]]<-mdist
-	coresizes[[length(coresizes)+1]]<-vcf2core
-	cases[[length(cases)+1]]<-case
-	snvs_used_list[[length(snvs_used_list)+1]]<-snvs_used
+for (experiment in c("cov","scov","alt","contamination")) {
+	experiment_dirs<-sort(dir(paste("experiments",experiment,sep="/"), full.names=TRUE))
+	
+	trees<-list()
+	mdists<-list()
+	coresizes<-list()
+	cases<-list()
+	snvs_used_list<-list()
+	
+	for(i in 1:length(experiment_dirs)) {
+		tree_name<-list.files(experiment_dirs[i], pattern="phylogeneticTree.newick")
+		mdist_name<-list.files(experiment_dirs[i], pattern="snvMatrix.tsv")
+		vcf2core_name<-list.files(experiment_dirs[i], pattern="vcf2core.tsv")
+		filter_name<-list.files(experiment_dirs[i], pattern="filterStats.txt")
+		title_name<-list.files(experiment_dirs[i], pattern="title")
+	
+		tree<-read.tree(paste(experiment_dirs[i],tree_name,sep="/"))
+		mdist<-read_snv_matrix(paste(experiment_dirs[i],mdist_name,sep="/"))
+		vcf2core<-read.delim(paste(experiment_dirs[i],vcf2core_name,sep="/"),row.names=1)
+		case<-paste(readLines(paste(experiment_dirs[i],title_name,sep="/")))
+	
+		filter_stats<-paste(readLines(paste(experiment_dirs[i],filter_name,sep="/")))
+		snvs_used<-sub("Number of sites used to generate phylogeny: ([0-9]+)$","\\1",grep("^Number of sites used to generate phylogeny: ",value=TRUE,filter_stats))
+	
+		trees[[length(trees)+1]]<-tree
+		mdists[[length(mdists)+1]]<-mdist
+		coresizes[[length(coresizes)+1]]<-vcf2core
+		cases[[length(cases)+1]]<-case
+		snvs_used_list[[length(snvs_used_list)+1]]<-snvs_used
+	}
+	
+	plot_all_trees(experiment,trees,cases,strain_table,mdists,coresizes,snvs_used_list)
 }
-
-plot_all_trees(trees,cases,strain_table,mdists,coresizes,snvs_used_list)
