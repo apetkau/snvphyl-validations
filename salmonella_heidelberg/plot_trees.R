@@ -102,7 +102,7 @@ plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,s
 	mtext(paste("Figure S",figure_num,": ",figure_label,sep=''),line=1,outer=TRUE,)
 
 	reset()
-	legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
+	#legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
 
 	dev.off()
 }
