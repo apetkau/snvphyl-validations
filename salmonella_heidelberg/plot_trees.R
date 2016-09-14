@@ -90,7 +90,7 @@ plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,s
 	size<-numtrees + (numtrees %% 2) # make multiple of 2
 	plot.new()
 	frame()
-	file_name<-paste("figure-S",figure_num,".pdf",sep='')
+	file_name<-paste("figure-S1-",figure_num,".pdf",sep='')
 	pdf(file_name,width=11,height=8.5)
 	layout(t(matrix(1:size,2,size/2)))
 	par(mar=c(2.5,0.5,2,0.5))
@@ -99,7 +99,7 @@ plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,s
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
-	mtext(paste("Figure S",figure_num,": ",figure_label,sep=''),line=1,outer=TRUE,)
+	mtext(paste(figure_num,": ",figure_label,sep=''),line=1,outer=TRUE,)
 
 	reset()
 	#legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
@@ -140,6 +140,7 @@ outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
 experiment_names<-c("cov","scov","alt","contamination")
 experiment_labels<-c("Minimum Coverage","Minimum Sample Coverage","Alternative Allele Ratio","Contamination")
+experiment_letters<-c("A","B","C","D")
 
 for (i in 1:length(experiment_names)) {
 	experiment<-experiment_names[i]
@@ -173,5 +174,5 @@ for (i in 1:length(experiment_names)) {
 		snvs_used_list[[length(snvs_used_list)+1]]<-snvs_used
 	}
 	
-	plot_all_trees(experiment,i,experiment_labels[i],trees,cases,strain_table,mdists,coresizes,snvs_used_list)
+	plot_all_trees(experiment,experiment_letters[i],experiment_labels[i],trees,cases,strain_table,mdists,coresizes,snvs_used_list)
 }
