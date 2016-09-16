@@ -261,7 +261,14 @@ for i in *_tree.txt; do Ktreedist.pl -rt original_gubbins.phy_phyml_tree.txt -ct
 cat *.tree.tsv | sort -ur | column -ts $'\t' # prints table of distances from ktreedist
 ```
 
+
 Compiling Results
 =================
 
 All results from `all-vs-valid` comparisons to Gubbins for each case were compiled into a table `snvphyl-gubbins.xlsx`.
+
+Figure S2 (plot of all trees) constructed from:
+
+```
+R CMD BATCH plot_trees.R
+```
