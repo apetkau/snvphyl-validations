@@ -15,23 +15,23 @@ reset <- function() {
 }
 
 plot_all_trees<-function(original_tree,trees,labels) {
-
-	frame()
-	plot.new()
-	file_name<-"figure-S2.pdf"
-	pdf(file_name,width=11,height=8.5)
-	layout(t(matrix(1:2,1,2)))
-	par(mar=c(2.5,0.5,2,0.5))
-	par(oma=c(5,0,3,0))
-
+	n<-1
 	for (i in 1:length(trees)) {
+		if (i %% 4 == 1) {
+			#mtext("Figure S2",line=1,outer=TRUE)
+			reset()
+			dev.off()
+			frame()
+			plot.new()
+			file_name<-paste("figure-S2-",n,".pdf",sep="")
+			n<-n+1
+			pdf(file_name,width=11,height=8.5)
+			layout(t(matrix(1:4,2,2)))
+			par(mar=c(2.5,0.5,2,0.5))
+			par(oma=c(5,0,3,0))
+		}
 		plot_tree(original_tree,trees[[i]],labels[[i]])
 	}
-	#mtext("Figure S2",line=1,outer=TRUE)
-
-	reset()
-
-	dev.off()
 }
 
 ## MAIN ##
