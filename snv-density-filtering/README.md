@@ -59,7 +59,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-20
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perll../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 # For numerical comparisons
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
@@ -172,59 +172,6 @@ perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gub
 perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected no-density-alignment.ordered.summary_of_snp_distribution.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
 ```
 
-SNVPhyl then Gubbins (with all positions)
-=========================================
-
-To test using an alignment from SNVs detected with SNVPhyl from Gubbins, the SNVPhyl results from no SNV density filtering was used to generate an alignment for Gubbins with all alignment positions detected by SNVPhyl.
-
-## Analyze Results
-
-```bash
-cd snvphyl-no-filter
-
-# Construct alignment of all SNV alignment columns and invariant sites
-# Uses script from https://github.com/phac-nml/snvphyl-tools/blob/ff57489703be4ba716eb5468b6de82c808f556ad/positions2snv_invariant_alignment.pl
-positions2snv_invariant_alignment.pl -i snvTable.tsv -o invariant-alignment-all -f fasta --reference-file ../FM211187.fasta --keep-all
-cd invariant-alignment-all/
-mv "gi|220673408|emb|FM211187.1|.fasta" no-density-alignment.fasta
-
-# Run Gubbins
-run_gubbins.py no-density-alignment-all.fasta
-
-# Compare results to original alignment used by Gubbins
-perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table ../../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
-perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table no-density-alignment-all.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > no-density-alignment-all.ordered.summary_of_snp_distribution.tsv
-
-perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected no-density-alignment-all.ordered.summary_of_snp_distribution.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
-```
-
-SNVPhyl with Phage/Genomic Islands removed
-==========================================
-
-To test the case of SNVPhyl results with no SNV density filtering, but phage/genomic islands removed, we perfomed the following.
-
-## Generate SNVPhyl invalid-positions file
-
-1. Genomic islands were downloaded from [IslandViewer](http://www.pathogenomics.sfu.ca/islandviewer/) for FM211187.1 (NC_011900.1) and stored as `NC_011900.1.islandviewer.tsv`
-2. Phage locations downloaded from [PHASTER](http://phaster.ca/) for FM211187.1 (NC_011900.1) and stored as NC_011900.1.phaster.txt
-3. Locations complied together into `invalid_positions.tsv` file.
-
-## Run SNVPhyl
-
-```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --invalid-positions invalid_positions.tsv --min-coverage 10 --filter-density-window 1 --filter-density-threshold 20 --output-dir snvphyl-no-filter-remove-phage-islands
-```
-
-## Analyse Results
-
-```bash
-cd snvphyl-no-filter-remove-phage-islands
-
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
-
-perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
-```
-
 Calculating Tree distances
 ==========================
 
@@ -244,14 +191,6 @@ sed -i -e 's/Reference/reference/' *.phy
 
 # Generate trees with phyml (version 20131022)
 for i in *.phy; do phyml -i $i -s BEST -m GTR --r_seed 42; done
-
-# Distances (with treedist from phylip package)
-mkdir distances
-cp original_gubbins.phy_phyml_tree.txt distances/intree
-n=2; for i in original_gubbins.phy_phyml_tree.txt snvphyl*phyml_tree.txt; do b=`basename $i .phy_phyml_tree.txt`; echo -e "$n\t$b" >> distances/number_name.tsv; cat $i >> distances/intree2; n=$(($n+1)); done
-cd distances
-echo -e "2\nL\nV\nY" | phylip treedist | tee settings
-for i in `cut -f 1 number_name.tsv`; do j=`grep "^$i" number_name.tsv | sed -e 's/^[0-9]\t//'`; sed -i -e "s/Trees 1 and $i/Trees 1 and $j/" outfile; done
 ```
 
 Compare trees with [Ktreedist](http://molevol.cmima.csic.es/castresana/Ktreedist.html) version 1.0.
