@@ -36,7 +36,7 @@ plot_all_trees<-function(original_tree,trees,labels) {
 
 ## MAIN ##
 
-tree_dir<-"tree-distances-with-gaps-n"
+tree_dir<-"tree-distances"
 original_tree<-read.tree(paste(tree_dir,"original_gubbins.phy_phyml_tree.txt",sep="/"))
 original_tree<-root(original_tree,"reference",resolve.root=TRUE)
 files<-c("snvphyl-no-filter.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-20.snvAlignment.phy_phyml_tree.txt","snvphyl-2-100.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-500.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-1000.snvAlignment.phy_phyml_tree.txt","snvphyl-2-2000.snvAlignment.phy_phyml_tree.txt","snvphyl-gubbins.phy_phyml_tree.txt")
