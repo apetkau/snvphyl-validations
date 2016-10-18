@@ -19,6 +19,13 @@ sed -i -e 's/gi|220673408|emb|FM211187.1| Streptococcus pneumoniae ATCC 700669 c
 
 mkdir original_gubbins/ && cd original_gubbins/
 run_gubbins.py ../PMEN1-with-reference.aln
+
+# Remove N/- characters from SNVs
+head -n 4 original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf > original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash
+tail -n+5 original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf | grep -v '[-N]' >> original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash
+
+# Generate phylip-formatted alignment from SNVs after removal of N/-
+sed -e 's/N/-/g' original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.fasta | perl -MBio::AlignIO -e '$i=Bio::AlignIO->new(-fh=>\*STDIN,-format=>"fasta");$o=Bio::AlignIO->new(-file=>">original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip.noNDashes",-format=>"phylip");print $i;$a=$i->next_aln->remove_gaps("-");$o->write_aln($a);'
 ```
 
 SNVPhyl no SNV-density filtering
@@ -38,7 +45,7 @@ Generate the (TP,FP,TN,FN) numbers which are compiled into a table later.  Case 
 ```bash
 cd snvphyl-no-filter
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 # For numerical comparisons (TP/FP, etc)
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
@@ -59,7 +66,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-20
 
-perll../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 # For numerical comparisons
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
@@ -84,7 +91,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-100
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
 ```
@@ -103,7 +110,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-500
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
 ```
@@ -122,7 +129,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-1000
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
 ```
@@ -141,7 +148,7 @@ snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --
 ```bash
 cd snvphyl-2-2000
 
-perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-table ../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash --mark-invalid-alignments | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
 ```
@@ -166,10 +173,15 @@ mv "gi|220673408|emb|FM211187.1|.fasta" no-density-alignment.fasta
 run_gubbins.py no-density-alignment.fasta
 
 # Compare results to original alignment used by Gubbins
-perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table ../../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
+perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table ../../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf.removeNDash | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv
 perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table no-density-alignment.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > no-density-alignment.ordered.summary_of_snp_distribution.tsv
 
 perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected no-density-alignment.ordered.summary_of_snp_distribution.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
+
+# For results including Ns/dashes
+perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table ../../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.withNDashes.tsv
+
+perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.withNDashes.tsv --variants-detected no-density-alignment.ordered.summary_of_snp_distribution.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
 ```
 
 Calculating Tree distances
@@ -182,9 +194,9 @@ mkdir tree-distances && cd tree-distances
 
 # Copy alignment files
 for i in ../snvphyl-*; do b=`basename $i`; cp $i/snvAlignment.phy $b.snvAlignment.phy; done
-cp ../original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip original_gubbins.phy
+cp ../original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip.noNDashes original_gubbins.phy
+cp ../original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip original_gubbins-withNDashes.phy
 cp ../snvphyl-no-filter/invariant-alignment/no-density-alignment.filtered_polymorphic_sites.phylip snvphyl-gubbins.phy
-cp ../snvphyl-no-filter/invariant-alignment-all/no-density-alignment-all.filtered_polymorphic_sites.phylip snvphyl-gubbins-all.phy
 
 # change all 'Reference' names in alignment to lower-case
 sed -i -e 's/Reference/reference/' *.phy
@@ -197,7 +209,8 @@ Compare trees with [Ktreedist](http://molevol.cmima.csic.es/castresana/Ktreedist
 
 ```bash
 for i in *_tree.txt; do Ktreedist.pl -rt original_gubbins.phy_phyml_tree.txt -ct $i -t $i.tree.tsv; done
-cat *.tree.tsv | sort -ur | column -ts $'\t' # prints table of distances from ktreedist
+Ktreedist.pl -rt original_gubbins-withNDashes.phy_phyml_tree.txt -ct snvphyl-gubbins.phy_phyml_tree.txt -t snvphyl-gubbins.phy_phyml_tree.txt.tree.withNDashes.tsv
+cat *.tree.tsv | sort -ur | column -ts $'\t'
 ```
 
 
