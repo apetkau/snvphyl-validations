@@ -4,8 +4,10 @@ library(ape)
 library(phytools)
 
 plot_tree<-function(original_tree,tree,label) {
-	plot(cophylo(original_tree,tree,rotate=TRUE),mar=c(1,1,2,1))
+	plot(cophylo(original_tree,tree,rotate=TRUE),mar=c(2,1,2,1))
 	title(main=label,adj=0.5)
+	mtext("Original alignment",side=1, adj=0, line=0.3)
+	mtext("SNVPhyl alignment",side=1, adj=1, line=0.3)
 	box(which="plot", lty="solid", lwd="2", col="black")
 }
 
@@ -18,7 +20,6 @@ plot_all_trees<-function(original_tree,trees,labels) {
 	n<-1
 	for (i in 1:length(trees)) {
 		if (i %% 4 == 1) {
-			#mtext("Figure S2",line=1,outer=TRUE)
 			reset()
 			dev.off()
 			frame()
@@ -30,7 +31,12 @@ plot_all_trees<-function(original_tree,trees,labels) {
 			par(mar=c(2.5,0.5,2,0.5))
 			par(oma=c(5,0,3,0))
 		}
+
 		plot_tree(original_tree,trees[[i]],labels[[i]])
+
+		if (i %% 4 == 1) {
+			mtext("Figure S2",line=1,outer=TRUE)
+		}
 	}
 }
 
@@ -40,7 +46,7 @@ tree_dir<-"tree-distances"
 original_tree<-read.tree(paste(tree_dir,"original_gubbins.phy_phyml_tree.txt",sep="/"))
 original_tree<-root(original_tree,"reference",resolve.root=TRUE)
 files<-c("snvphyl-no-filter.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-20.snvAlignment.phy_phyml_tree.txt","snvphyl-2-100.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-500.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-1000.snvAlignment.phy_phyml_tree.txt","snvphyl-2-2000.snvAlignment.phy_phyml_tree.txt","snvphyl-gubbins.phy_phyml_tree.txt")
-labels<-list("A: No filter", "B: 2 SNVs in 20 bp", "C: 2 SNVs in 100 bp", "D: 2 SNVs in 500 bp", "E: 2 SNVs in 1000 bp", "F: 2 SNVs in 2000 bp", "G: SNVPhyl then Gubbins")
+labels<-list("a) No filter", "b) 2 SNVs in 20 bp", "c) 2 SNVs in 100 bp", "d) 2 SNVs in 500 bp", "e) 2 SNVs in 1000 bp", "f) 2 SNVs in 2000 bp", "g) SNVPhyl then Gubbins")
 
 trees<-list()
 
