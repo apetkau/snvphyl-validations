@@ -68,9 +68,9 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	title(sub=paste(coresize_rounded,"% core",sep=''),adj=1,line=0.25)
 	title(sub=failure_label,adj=0,line=1.25,col.sub=failure_color)
 
-	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[1])
-	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[2])
-	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white",cex=1.2,col=outbreak_colors[3])
+	nodelabels("1",getMRCA(tree,outbreaks[[1]]),frame="circle",bg="white",cex=1.2,font=2,col=outbreak_colors[1])
+	nodelabels("2",getMRCA(tree,outbreaks[[2]]),frame="circle",bg="white",cex=1.2,font=2,col=outbreak_colors[2])
+	nodelabels("3",getMRCA(tree,outbreaks[[3]]),frame="circle",bg="white",cex=1.2,font=2,col=outbreak_colors[3])
 
 	box(which="plot", lty=boxtype, lwd="2", col=boxcolor)
 }
