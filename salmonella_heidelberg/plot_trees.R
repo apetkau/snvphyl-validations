@@ -75,36 +75,16 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 	box(which="plot", lty=boxtype, lwd="2", col=boxcolor)
 }
 
-reset <- function() {
-	par(mfrow=c(1, 1), oma=c(0,0,0,0), mar=c(0,0,0,0), new=TRUE)
-	plot(0:1, 0:1, type="n", xlab="", ylab="", axes=FALSE)
-}
-
 plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,snv_matrices,coresizes,snvs_used_list) {
 	outbreak1<-as.vector(subset(table,Outbreak.number=="1")$Strain)
 	outbreak2<-as.vector(subset(table,Outbreak.number=="2")$Strain)
 	outbreak3<-as.vector(subset(table,Outbreak.number=="3")$Strain)
 	outbreaks<-list(outbreak1,outbreak2,outbreak3)
 
-	numtrees<-length(trees)
-	size<-numtrees + (numtrees %% 2) # make multiple of 2
-	plot.new()
-	frame()
-	file_name<-paste("figure-S1-",figure_num,".pdf",sep='')
-	pdf(file_name,width=11,height=8.5)
-	layout(t(matrix(1:size,2,size/2)))
-	par(mar=c(2.5,0.5,2,0.5))
-	par(oma=c(5,0,3,0))
-
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
-	mtext(paste(figure_num,": ",figure_label,sep=''),line=1,outer=TRUE,)
-
-	reset()
-	#legend("bottom",horiz=TRUE,cex=0.75,legend=c("Normal","Outbreak (1,2,3)","Failure"),fill=c(normal_color,outbreak_color,failure_color),xpd=NA)
-
-	dev.off()
+	mtext(paste("Figure S2. ",figure_num,") ",figure_label,sep=''),line=1,outer=TRUE)
 }
 
 root_on_tip<-function(tree,tip_label) {
@@ -140,7 +120,12 @@ outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
 experiment_names<-c("cov","scov","alt","contamination")
 experiment_labels<-c("Minimum Coverage","Minimum Sample Coverage","SNV Abundance Ratio","Contamination")
-experiment_letters<-c("A","B","C","D")
+experiment_letters<-c("a","b","c","d")
+
+pdf("Supplementary_Figure_S2.pdf",width=11,height=8.5)
+layout(t(matrix(1:4,2,2)))
+par(mar=c(2.5,0.5,2,0.5))
+par(oma=c(5,0,3,0))
 
 for (i in 1:length(experiment_names)) {
 	experiment<-experiment_names[i]
