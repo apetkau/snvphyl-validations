@@ -12,7 +12,7 @@ plot_tree<-function(original_tree,tree,label) {
 }
 
 plot_all_trees<-function(original_tree,trees,labels) {
-	pdf("Figure_S2.pdf",width=11,height=8.5)
+	pdf("Supplementary_Figure_S1.pdf",width=11,height=8.5)
 	layout(t(matrix(1:4,2,2)))
 	par(mar=c(2.5,0.5,2,0.5))
 	par(oma=c(5,0,3,0))
@@ -21,7 +21,7 @@ plot_all_trees<-function(original_tree,trees,labels) {
 		plot_tree(original_tree,trees[[i]],labels[[i]])
 
 		if (i %% 4 == 1) {
-			mtext("Figure S2",line=1,outer=TRUE, cex=1.3)
+			mtext("Figure S1",line=1,outer=TRUE, cex=1.3)
 		}
 	}
 }
