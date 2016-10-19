@@ -11,31 +11,17 @@ plot_tree<-function(original_tree,tree,label) {
 	box(which="plot", lty="solid", lwd="2", col="black")
 }
 
-reset <- function() {
-	par(mfrow=c(1, 1), oma=c(0,0,0,0), mar=c(0,0,0,0), new=TRUE)
-	plot(0:1, 0:1, type="n", xlab="", ylab="", axes=FALSE)
-}
-
 plot_all_trees<-function(original_tree,trees,labels) {
-	n<-1
-	for (i in 1:length(trees)) {
-		if (i %% 4 == 1) {
-			reset()
-			dev.off()
-			frame()
-			plot.new()
-			file_name<-paste("figure-S2-",n,".pdf",sep="")
-			n<-n+1
-			pdf(file_name,width=11,height=8.5)
-			layout(t(matrix(1:4,2,2)))
-			par(mar=c(2.5,0.5,2,0.5))
-			par(oma=c(5,0,3,0))
-		}
+	pdf("Figure_S2.pdf",width=11,height=8.5)
+	layout(t(matrix(1:4,2,2)))
+	par(mar=c(2.5,0.5,2,0.5))
+	par(oma=c(5,0,3,0))
 
+	for (i in 1:length(trees)) {
 		plot_tree(original_tree,trees[[i]],labels[[i]])
 
 		if (i %% 4 == 1) {
-			mtext("Figure S2",line=1,outer=TRUE)
+			mtext("Figure S2",line=1,outer=TRUE, cex=1.3)
 		}
 	}
 }
