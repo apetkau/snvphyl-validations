@@ -57,7 +57,7 @@ dir=alt
 mkdir experiments/$dir
 for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --min-coverage 10 --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 
-for alt in 0.25 0.5 0.75 0.9; do echo "Alt. Allele Ratio $alt" > experiments/alt/alt-${alt}/title; done
+for alt in 0.25 0.5 0.75 0.9; do echo "SNV Abundance Ratio $alt" > experiments/alt/alt-${alt}/title; done
 ```
 
 ## Sample Coverage
