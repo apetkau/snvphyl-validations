@@ -102,7 +102,7 @@ dir=scov
 mkdir experiments/$dir
 for scov in c30 c20 c15 c10; do name=scov-${scov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
 
-for scov in 30 20 15 10; do echo "Min. Sample Coverage $scov" > experiments/scov/scov-c${scov}/title; done
+for scov in 30 20 15 10; do echo "Subsample coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
 
 ## Contamination
