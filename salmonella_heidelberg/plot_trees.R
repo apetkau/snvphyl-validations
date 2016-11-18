@@ -56,7 +56,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 			failure_label<-paste(failure_label,"Not monophyletic",sep='')
 		}
 		if (failed_snv_distance) {
-			failure_label<-paste(failure_label,"Distance not within ",max_snv_distance, " SNVs", sep='')
+			failure_label<-paste(failure_label,"Maximum distance of ",snv_distance," SNVs not within ",max_snv_distance, " SNVs", sep='')
 		}
 	}
 
