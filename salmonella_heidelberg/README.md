@@ -175,4 +175,4 @@ Please run the script `plot_trees.R`.
 R CMD BATCH plot_trees.R
 ```
 
-This will generate a file `figure3_trees.pdf` which has the completed figure.
+This will generate a file `Supplementary_Figure_S2.pdf` which has the completed figure.

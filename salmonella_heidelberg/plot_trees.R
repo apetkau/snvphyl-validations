@@ -37,7 +37,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 				failed_monophyletic<-TRUE
 			}
 
-			if (snv_distance > max_snv_distance) {
+			if (snv_distance >= max_snv_distance) {
 				edgecolors[which.edge(tree,outbreaks[[i]])]<-failure_color
 				boxcolor<-failure_color
 				outbreak_colors[i]<-failure_color
@@ -56,7 +56,7 @@ plot_tree<-function(tree,label,table,outbreaks,snv_matrix,coresize,snvs_used) {
 			failure_label<-paste(failure_label,"Not monophyletic",sep='')
 		}
 		if (failed_snv_distance) {
-			failure_label<-paste(failure_label,"Distance not within ",max_snv_distance, sep='')
+			failure_label<-paste(failure_label,"Distance not within ",max_snv_distance, " SNVs", sep='')
 		}
 	}
 
@@ -84,7 +84,7 @@ plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,s
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
-	mtext(paste("Figure S2. ",figure_num,") ",figure_label,sep=''),line=1,outer=TRUE)
+	mtext(paste("Figure S2\n",figure_num,") ",figure_label,sep=''),line=0,outer=TRUE)
 }
 
 root_on_tip<-function(tree,tip_label) {
@@ -99,7 +99,7 @@ read_snv_matrix<-function(file) {
 }
 
 is_valid_cluster<-function(tree,isolates,snv_matrix,max_distance) {
-	return(is.monophyletic(tree,isolates,reroot=FALSE) && max(snv_matrix[isolates,isolates]) <= max_distance)
+	return(is.monophyletic(tree,isolates,reroot=FALSE) && max(snv_matrix[isolates,isolates]) < max_distance)
 }
 
 all_valid_clusters<-function(tree,outbreaks,snv_matrix,max_distance) {
