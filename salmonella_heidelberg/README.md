@@ -1,19 +1,26 @@
+# SNVPhyl parameter optimization
+
+This describes procedures for parameter optimization for SNVPhyl on real-world data.  Data comes from <https://www.ncbi.nlm.nih.gov/pubmed/26582830> which is the source for the file `strain_table.txt`.
+
+# Scripts/
+
+1. [plot_trees.R](plot_trees.R): Constructs figure comparing all phylogenetic trees.
+
+# Dependencies
+
+* [SNVPhyl command-line-interface](https://github.com/phac-nml/snvphyl-galaxy-cli)
+* [Docker](https://www.docker.com/)
+* R and R module [APE](http://ape-package.ird.fr/).
+* Perl and BioPerl
+* [seqtk](https://github.com/lh3/seqtk)
+
 # Initial Setup
 
-Directory `S_heildelberg_QC/` should contain a folder for each sample, with fastq files within each folder.
+Directory `fastqs/` should contain all fastq files, named like `SH08-001_1.fastq` and `SH08-001_2.fastq`.
 
 # Data Preparation
 
-1. Re-name all files/link into `fastqs/` directory.
-
-    ```
-    cd fastqs/
-    for i in `cat ../../../data/strains.txt`; do prev=`echo $i|cut -d ',' -f 1`; curr=`echo $i|cut -d ',' -f 2`; ln -s ../S_heildelberg_QC/$prev/*_R1_001.fastq ${curr}_1.fastq; done
-    for i in `cat ../../../data/strains.txt`; do prev=`echo $i|cut -d ',' -f 1`; curr=`echo $i|cut -d ',' -f 2`; ln -s ../S_heildelberg_QC/$prev/*_R2_001.fastq ${curr}_2.fastq; done
-    cd ..
-    ```
-
-2. Estimate coverages for each sample based on reference genome length.
+1. Estimate coverages for each sample based on reference genome length.
 
     ```
     (for i in fastqs/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee coverages.txt
@@ -21,13 +28,13 @@ Directory `S_heildelberg_QC/` should contain a folder for each sample, with fast
 
 Minimum coverage is `61`, so downsample accordingly.
 
-3. Downsample all sequence reads using `seqtk` (1.1-r92-dirty) so minimum coverage is ~30.
+2. Downsample all sequence reads using `seqtk` (1.1-r92-dirty) so minimum coverage is ~30.
 
     ```
     for i in fastqs/*.fastq; do b=`basename $i`; echo $i; seqtk sample -s 121 $i 0.5 > fastqs-downsampled/$b; done
     ```
 
-4. Re-check coverages.
+3. Re-check coverages.
 
     ```
     (for i in fastqs-downsampled/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs-downsampled/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs-downsampled/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee coverages-downsampled.txt
@@ -36,7 +43,7 @@ Minimum coverage is `61`, so downsample accordingly.
 
 ## Minimum Coverage
 
-Run with minimum coverage of 5, 10, 15, 20.  Using <https://github.com/phac-nml/snvphyl-galaxy-cli> commit `dcebd40a3ddb5b335caa3e4de6ddc6cdd88f7a8b`.
+Run with minimum coverage of 5, 10, 15, 20.
 
 ```
 dir=cov

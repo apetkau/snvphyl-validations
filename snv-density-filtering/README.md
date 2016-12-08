@@ -29,7 +29,7 @@ Dependencies
 * [PhyML](http://www.atgc-montpellier.fr/phyml/)
 * [Ktreedist](http://molevol.cmima.csic.es/castresana/Ktreedist.html)
 * <https://github.com/phac-nml/snvphyl-tools/blob/ff57489703be4ba716eb5468b6de82c808f556ad/positions2snv_invariant_alignment.pl>
-* R and R modules APE and Phytools.
+* R and R modules [APE](http://ape-package.ird.fr/) and [Phytools](https://github.com/liamrevell/phytools).
 
 Original Gubbins Results
 ========================
