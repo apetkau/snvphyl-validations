@@ -1,5 +1,5 @@
-WGS SNVPhyl Whole Genome Phylogeny Simulations
-==============================================
+SNVPhyl simulated data validation
+===================================
 
 Generates simulated variants and reads for validating the SNVPhyl pipeline.  Simulated variants are stored in a variant table identical to the table produced by SNVPhyl for easy comparison:
 
