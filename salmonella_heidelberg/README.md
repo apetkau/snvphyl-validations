@@ -26,7 +26,7 @@ Directory `fastqs/` should contain all fastq files, named like `SH08-001_1.fastq
     (for i in fastqs/*_1.fastq; do name=`basename $i _1.fastq`; forward=`sed -n 2~4p fastqs/${name}_1.fastq|tr -d '\n'|wc -c`; reverse=`sed -n 2~4p fastqs/${name}_2.fastq|tr -d '\n'|wc -c`; ref=`bp_seq_length reference/S_HeidelbergSL476.fasta | cut -d ' ' -f 2| tr -d '\n'`; cov=`echo "($forward+$reverse)/$ref"|bc -l`; echo -e "$name\t$forward\t$reverse\t$ref\t$cov"; done) | sort -k 5,5n | tee coverages.txt
     ```
 
-Minimum coverage is `61`, so downsample accordingly.
+    Minimum coverage is `61`, so downsample accordingly.
 
 2. Downsample all sequence reads using `seqtk` (1.1-r92-dirty) so minimum coverage is ~30.
 
