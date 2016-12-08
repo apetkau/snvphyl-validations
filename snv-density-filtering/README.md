@@ -1,6 +1,8 @@
 SNV Density Filtering Validation
 ================================
 
+This describes the procedures used for SNVPhyl's SNV density evaluation against the [Gubbins](https://github.com/sanger-pathogens/gubbins) software package.
+
 Files
 =====
 
@@ -9,6 +11,25 @@ Files
 * `pmen1.name_accession` - Table of genome names and accession numbers for dataset, extracted from Table S1 in <http://science.sciencemag.org/content/331/6016/430.full>.
 * `pmen1.err` - Table of run ids for accessions in `pmen1.name_accession`.  Generated using [SRAdb](https://bioconductor.org/packages/release/bioc/html/SRAdb.html).
 * `fastq/` - Concatnated fastq files.  Downloaded from NCBI using ERR ids from `pmen1.err` and concatenated/re-named from names in `pmen1.name_accession`.
+
+Scripts
+=======
+
+1. [../scripts/gubbinsSnps2Table.pl](../scripts/gubbinsSnps2Table.pl): Converts Gubbins VCF SNP/SNV file to SNVPhyl SNV table format.
+2. [../scripts/compare_positions.pl](../scripts/compare_positions.pl): Compares converted variant table from Gubbins and table produced by SNVPhyl.  Counts TP/FP/TN/FN variants.
+3. [plot_trees.R](plot_trees.R): Constructs figure comparing phylogenetic trees.
+
+Dependencies
+============
+
+* [Gubbins](https://github.com/sanger-pathogens/gubbins)
+* Perl modules: `cpanm Bio::SeqIO Set::Scalar`
+* [SNVPhyl command-line-interface](https://github.com/phac-nml/snvphyl-galaxy-cli)
+* [Docker](https://www.docker.com/)
+* [PhyML](http://www.atgc-montpellier.fr/phyml/)
+* [Ktreedist](http://molevol.cmima.csic.es/castresana/Ktreedist.html)
+* <https://github.com/phac-nml/snvphyl-tools/blob/ff57489703be4ba716eb5468b6de82c808f556ad/positions2snv_invariant_alignment.pl>
+* R and R modules APE and Phytools.
 
 Original Gubbins Results
 ========================
@@ -71,11 +92,6 @@ perl ../../scripts/gubbinsSnps2Table.pl --snvphyl-table snvTable.tsv --gubbins-t
 
 # For numerical comparisons
 perl ../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv --variants-detected snvTable.tsv --reference-genome ../FM211187.fasta --false-detection-output false | column -t
-
-# For visual/diff comparisons
-head -n 1 snvTable.tsv > snvTable.valid.tsv && grep -P '\tvalid\t' snvTable.tsv >> snvTable.valid.tsv # generate table of only valid SNVPhyl results
-
-meld PMEN1-with-reference.ordered.summary_of_snp_distribution.tsv snvTable.valid.tsv
 ```
 
 SNVPhyl With Filter 2 in 100
@@ -226,7 +242,7 @@ cat *.tree*.tsv | sort -ur | column -ts $'\t'
 Compiling Results
 =================
 
-All results from `all-vs-valid` comparisons to Gubbins for each case were compiled into a table `snvphyl-gubbins.xlsx`.
+All results from `all-vs-valid` comparisons to Gubbins for each case were compiled into a table.
 
 Figure S2 (plot of all trees) constructed from:
 
