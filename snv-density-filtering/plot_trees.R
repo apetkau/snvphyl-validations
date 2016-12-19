@@ -32,7 +32,7 @@ tree_dir<-"tree-distances"
 original_tree<-read.tree(paste(tree_dir,"original_gubbins.phy_phyml_tree.txt",sep="/"))
 original_tree<-root(original_tree,"reference",resolve.root=TRUE)
 files<-c("snvphyl-no-filter.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-20.snvAlignment.phy_phyml_tree.txt","snvphyl-2-100.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-500.snvAlignment.phy_phyml_tree.txt", "snvphyl-2-1000.snvAlignment.phy_phyml_tree.txt","snvphyl-2-2000.snvAlignment.phy_phyml_tree.txt","snvphyl-gubbins.phy_phyml_tree.txt")
-labels<-list("a) No filter", "b) 2 SNVs in 20 bp", "c) 2 SNVs in 100 bp", "d) 2 SNVs in 500 bp", "e) 2 SNVs in 1000 bp", "f) 2 SNVs in 2000 bp", "g) SNVPhyl then Gubbins")
+labels<-list("(a) No filter", "(b) 2 SNVs in 20 bp", "(c) 2 SNVs in 100 bp", "(d) 2 SNVs in 500 bp", "(e) 2 SNVs in 1000 bp", "(f) 2 SNVs in 2000 bp", "(g) SNVPhyl then Gubbins")
 
 trees<-list()
 
