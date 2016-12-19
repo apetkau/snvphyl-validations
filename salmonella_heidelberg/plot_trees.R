@@ -84,7 +84,7 @@ plot_all_trees<-function(experiment,figure_num,figure_label,trees,labels,table,s
 	for (i in 1:length(trees)) {
 		plot_tree(trees[[i]],labels[[i]],table,outbreaks,snv_matrices[[i]],coresizes[[i]],snvs_used_list[[i]])
 	}
-	mtext(paste("Figure S2\n",figure_num,") ",figure_label,sep=''),line=0,outer=TRUE)
+	mtext(paste("Figure S2\n(",figure_num,") ",figure_label,sep=''),line=0,outer=TRUE, cex=1.3)
 }
 
 root_on_tip<-function(tree,tip_label) {
