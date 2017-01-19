@@ -24,7 +24,7 @@ else
 	log_err=$snvphyl_run_dir/$run_name-log.err
 	variants_summary=$output_dir/variants_comparison_summary.tsv
 	false_variants=$output_dir/false_variants.tsv
-	command="snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir $fastq_dir --reference-file $reference --run-name $run_name --alternative-allele-ratio $alternative_allele_ratio --min-coverage $min_coverage --filter-density-window 0 --filter-density-threshold 100 --output-dir $output_dir"
+	command="snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir $fastq_dir --reference-file $reference --run-name $run_name --alternative-allele-ratio $alternative_allele_ratio --min-coverage $min_coverage --filter-density-window 1 --filter-density-threshold 100 --output-dir $output_dir"
 	date
 	echo $command
 	echo "Run 'tail -f $log_out $log_err' for more details"

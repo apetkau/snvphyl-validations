@@ -8,7 +8,7 @@ sh generate-simulations.sh
 sh run-simulations.sh
 ```
 
-Results will appear in `simulations/e_coli_sakai_w_plasmids/`.
+Results will appear in `simulations/e_coli_sakai_w_plasmids/`, in particular the file `simulations/e_coli_sakai_w_plasmids/snvphyl-runs/output-10-0.75/variants_comparison_summary.tsv`.
 
 Scripts
 ======= 
@@ -29,4 +29,5 @@ Dependencies
 * Perl modules: `cpanm Bio::SeqIO Set::Scalar`
 * [SNVPhyl command-line-interface](https://github.com/phac-nml/snvphyl-galaxy-cli)
 * [Docker](https://www.docker.com/)
+* [MUMMer](http://mummer.sourceforge.net/)
 
