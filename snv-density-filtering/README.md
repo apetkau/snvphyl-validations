@@ -57,7 +57,7 @@ SNVPhyl no SNV-density filtering
 
 ```bash
 # Disable SNV density filtering (run with threshold much larger than window size)
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 1 --filter-density-threshold 20 --output-dir snvphyl-no-filter
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 1 --filter-density-threshold 20 --output-dir snvphyl-no-filter
 ```
 
 ## Analyze Results
@@ -81,7 +81,7 @@ Assumes [SNVPhyl Galaxy CLI](https://github.com/phac-nml/snvphyl-galaxy-cli) is 
 ## Run SNVPhyl
 
 ```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 20 --filter-density-threshold 2 --output-dir snvphyl-2-20
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 20 --filter-density-threshold 2 --output-dir snvphyl-2-20
 ```
 ## Analyze Results
 
@@ -100,7 +100,7 @@ SNVPhyl With Filter 2 in 100
 ## Run SNVPhyl
 
 ```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 100 --filter-density-threshold 2 --output-dir snvphyl-2-100
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 100 --filter-density-threshold 2 --output-dir snvphyl-2-100
 ```
 
 ## Analyze Results
@@ -119,7 +119,7 @@ SNVPhyl With Filter 2 in 500
 ## Run SNVPhyl
 
 ```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 500 --filter-density-threshold 2 --output-dir snvphyl-2-500
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 500 --filter-density-threshold 2 --output-dir snvphyl-2-500
 ```
 
 ## Analyze Results
@@ -138,7 +138,7 @@ SNVPhyl With Filter 2 in 1000
 ## Run SNVPhyl
 
 ```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 1000 --filter-density-threshold 2 --output-dir snvphyl-2-1000
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 1000 --filter-density-threshold 2 --output-dir snvphyl-2-1000
 ```
 
 ## Analyze Results
@@ -157,7 +157,7 @@ SNVPhyl With Filter 2 in 2000
 ## Run SNVPhyl
 
 ```bash
-snvphyl.py --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 2000 --filter-density-threshold 2 --output-dir snvphyl-2-2000
+snvphyl.py --snvphyl-version 1.0 --deploy-docker --fastq-dir fastq/ --reference-file FM211187.fasta --min-coverage 10 --filter-density-window 2000 --filter-density-threshold 2 --output-dir snvphyl-2-2000
 ```
 
 ## Analyze Results

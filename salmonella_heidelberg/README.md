@@ -49,7 +49,7 @@ Run with minimum coverage of 5, 10, 15, 20.
 ```
 dir=cov
 mkdir experiments/$dir
-for cov in 5 10 15 20; do name=cov-${cov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
+for cov in 5 10 15 20; do name=cov-${cov}; echo $name; snvphyl.py --snvphyl-version 1.0 --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled --min-coverage $cov --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee min-coverage.log
 
 # Construct files storing titles
 for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${cov}/title; done
@@ -63,7 +63,7 @@ mv experiments/cov/cov-5 experiments/cov/cov-05
 ```
 dir=alt
 mkdir experiments/$dir
-for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --min-coverage 10 --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
+for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --snvphyl-version 1.0 --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --min-coverage 10 --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 
 for alt in 0.25 0.5 0.75 0.9; do echo "SNV Abundance Ratio $alt" > experiments/alt/alt-${alt}/title; done
 ```
@@ -108,7 +108,7 @@ Run SNVPhyl on each case using default parameters.
 ```
 dir=scov
 mkdir experiments/$dir
-for scov in c30 c20 c15 c10; do name=scov-${scov}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
+for scov in c30 c20 c15 c10; do name=scov-${scov}; echo $name; snvphyl.py --snvphyl-version 1.0 --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-sample-coverage/${scov} --min-coverage 10 --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee sample-coverage.log
 
 for scov in 30 20 15 10; do echo "Subsample coverage $scov" > experiments/scov/scov-c${scov}/title; done
 ```
@@ -169,7 +169,7 @@ Run SNVPhyl on each case.
 ```
 dir=contamination
 mkdir experiments/$dir
-for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; snvphyl.py --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
+for case in 30p 20p 10p 05p; do name=contamination-${case}; echo $name; snvphyl.py --snvphyl-version 1.0 --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-contamination/${case} --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee contamination.log
 
 # Titles
 for p in 30 20 10 05; do echo "${p}% contaminated" > experiments/contamination/contamination-${p}p/title; done
