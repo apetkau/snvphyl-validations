@@ -10,7 +10,7 @@ Files
 * `PMEN1.aln.gz` - Original alignment, from <ftp://ftp.sanger.ac.uk/pub/project/pathogens/gubbins/PMEN1.aln.gz>
 * `pmen1.name_accession` - Table of genome names and accession numbers for dataset, extracted from Table S1 in <http://science.sciencemag.org/content/331/6016/430.full>.
 * `pmen1.err` - Table of run ids for accessions in `pmen1.name_accession`.  Generated using [SRAdb](https://bioconductor.org/packages/release/bioc/html/SRAdb.html).
-* `fastq/` - Concatnated fastq files.  Downloaded from NCBI using ERR ids from `pmen1.err` and concatenated/re-named from names in `pmen1.name_accession`.
+* `fastq/` - Concatnated fastq files.  Must be downloaded separatly from NCBI using ERR ids from `pmen1.err` and concatenated/re-named from names in `pmen1.name_accession`.
 
 Scripts
 =======
@@ -202,11 +202,6 @@ perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gub
 perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table no-density-alignment.summary_of_snp_distribution.noNs.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > no-density-alignment.ordered.summary_of_snp_distribution.noNs.tsv
 
 perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.removeNDash.tsv --variants-detected no-density-alignment.ordered.summary_of_snp_distribution.noNs.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
-
-# For results including Ns/dashes
-perl ../../../scripts/gubbinsSnps2Table.pl --snvphyl-table ../snvTable.tsv --gubbins-table ../../original_gubbins/PMEN1-with-reference.summary_of_snp_distribution.vcf | sed -e 's/{chrom}/gi|220673408|emb|FM211187.1|/' > PMEN1-with-reference.ordered.summary_of_snp_distribution.withNDashes.tsv
-
-perl ../../../scripts/compare_positions.pl --variants-true PMEN1-with-reference.ordered.summary_of_snp_distribution.withNDashes.tsv --variants-detected no-density-alignment.ordered.summary_of_snp_distribution.noNs.tsv --reference-genome ../../FM211187.fasta --false-detection-output false | column -t
 ```
 
 Calculating Tree distances
@@ -220,7 +215,6 @@ mkdir tree-distances && cd tree-distances
 # Copy alignment files
 for i in ../snvphyl-*; do b=`basename $i`; cp $i/snvAlignment.phy $b.snvAlignment.phy; done
 cp ../original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip.noNDashes original_gubbins.phy
-cp ../original_gubbins/PMEN1-with-reference.filtered_polymorphic_sites.phylip original_gubbins-withNDashes.phy
 cp ../snvphyl-no-filter/invariant-alignment/no-density-alignment.filtered_polymorphic_sites.noNs.phylip snvphyl-gubbins.phy
 
 # change all 'Reference' names in alignment to lower-case
@@ -234,10 +228,8 @@ Compare trees with [Ktreedist](http://molevol.cmima.csic.es/castresana/Ktreedist
 
 ```bash
 for i in *_tree.txt; do Ktreedist.pl -rt original_gubbins.phy_phyml_tree.txt -ct $i -t $i.tree.tsv; done
-Ktreedist.pl -rt original_gubbins-withNDashes.phy_phyml_tree.txt -ct snvphyl-gubbins.phy_phyml_tree.txt -t snvphyl-gubbins.phy_phyml_tree.txt.tree.withNDashes.tsv
-cat *.tree*.tsv | sort -ur | column -ts $'\t'
+cat *.tree*.tsv | sort -ur | column -ts $'\t' # produces list of k-scores used in table
 ```
-
 
 Compiling Results
 =================
