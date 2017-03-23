@@ -8,7 +8,28 @@ sh generate-simulations.sh
 sh run-simulations.sh
 ```
 
-Results will appear in `simulations/e_coli_sakai_w_plasmids/`, in particular the file `simulations/e_coli_sakai_w_plasmids/snvphyl-runs/output-10-0.75/variants_comparison_summary.tsv`.
+Results will appear in `simulations/e_coli_sakai_w_plasmids/`, in particular the file `simulations/e_coli_sakai_w_plasmids/snvphyl-runs/output-10-0.75/variants_comparison_summary.tsv`, comparing the variants simulated to the variants detected.
+
+To find the misscalled bases and construct Table S3, the following commands were run.
+
+```bash
+# Search for base differences (excluding - and N) in the results.
+grep -P 'all-vs-all\tFP' simulations/e_coli_sakai_w_plasmids/snvphyl-runs/output-10-0.75/false_variants.tsv
+
+# Search for specific bases for all simulated genomes in list of positions from command above.  E.g.
+grep 345916 simulations/e_coli_sakai_w_plasmids/variants-e_coli_sakai_w_plasmids.tsv simulations/e_coli_sakai_w_plasmids/snvphyl-runs/output-10-0.75/snvTable.tsv
+
+# Use these results to fill in Table S3.
+```
+To determine the copy numbers of the covering regions for each of the above variants the below commands were run.
+
+```
+cd simulations/e_coli_sakai_w_plasmids/fastq/genomes
+for i in *.fasta; do nucmer --maxmatch --nosimplify --prefix $i ../../e_coli_sakai_w_plasmids.fasta $i; done
+
+# for each position and genome, run show-snps and record copies covering position
+for p in 345916 2205013 4159150; do for g in *.fasta.delta; do echo "Position $p, Genome $g"; show-snps -l -r $g | grep "$p  *[ATCG] [ATCG]  *$p"; done; done
+```
 
 Scripts
 ======= 
