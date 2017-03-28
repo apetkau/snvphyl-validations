@@ -119,7 +119,7 @@ outbreak2<-as.vector(subset(strain_table,Outbreak.number=="2")$Strain)
 outbreak3<-as.vector(subset(strain_table,Outbreak.number=="3")$Strain)
 
 experiment_names<-c("cov","scov","alt","contamination")
-experiment_labels<-c("Minimum Coverage","Subsample coverage level","SNV Abundance Ratio","Contamination")
+experiment_labels<-c("Minimum Coverage","Subsample coverage level","Relative SNV Abundance","Contamination")
 experiment_letters<-c("a","b","c","d")
 
 pdf("Supplementary_Figure_S2.pdf",width=11,height=8.5)

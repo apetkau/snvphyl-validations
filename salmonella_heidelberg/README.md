@@ -58,14 +58,14 @@ for cov in 5 10 15 20; do echo "Minimum Coverage $cov" > experiments/cov/cov-${c
 mv experiments/cov/cov-5 experiments/cov/cov-05
 ```
 
-## Alternative Allele Ratio
+## Relative SNV Abundance
 
 ```
 dir=alt
 mkdir experiments/$dir
 for alt in 0.25 0.5 0.75 0.9; do name=alt-${alt}; echo $name; snvphyl.py --snvphyl-version 1.0 --deploy-docker --reference-file reference/S_HeidelbergSL476.fasta --fastq-dir fastqs-downsampled/ --min-coverage 10 --alternative-allele-ratio $alt --run-name $name --output-dir experiments/$dir/$name; done 2>&1 | tee alt-allele-ratio.log
 
-for alt in 0.25 0.5 0.75 0.9; do echo "SNV Abundance Ratio $alt" > experiments/alt/alt-${alt}/title; done
+for alt in 0.25 0.5 0.75 0.9; do echo "Relative SNV Abundance $alt" > experiments/alt/alt-${alt}/title; done
 ```
 
 ## Sample Coverage
